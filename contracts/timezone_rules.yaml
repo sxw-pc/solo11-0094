@@ -1,0 +1,35 @@
+version: 1
+description: 合成 fixture 使用的 2024 年时区规则簿；不依赖系统 tzdata。
+zones:
+  America/New_York:
+    description: 美国东部时间；2024-03-10 前拨，2024-11-03 回拨。
+    base_offset: "-05:00"
+    transitions:
+      - at_utc: "2024-03-10T07:00:00Z"
+        offset: "-04:00"
+      - at_utc: "2024-11-03T06:00:00Z"
+        offset: "-05:00"
+  Europe/Berlin:
+    description: 中欧时间；2024-03-31 前拨，2024-10-27 回拨。
+    base_offset: "+01:00"
+    transitions:
+      - at_utc: "2024-03-31T01:00:00Z"
+        offset: "+02:00"
+      - at_utc: "2024-10-27T01:00:00Z"
+        offset: "+01:00"
+  Asia/Shanghai:
+    description: 中国标准时间；全年固定 UTC+08:00。
+    base_offset: "+08:00"
+    transitions: []
+  Australia/Sydney:
+    description: 澳大利亚东部时间；2024-04-07 回拨，2024-10-06 前拨。
+    base_offset: "+11:00"
+    transitions:
+      - at_utc: "2024-04-06T16:00:00Z"
+        offset: "+10:00"
+      - at_utc: "2024-10-05T16:00:00Z"
+        offset: "+11:00"
+  UTC:
+    description: 仅用于显式 UTC 语义的基准时区。
+    base_offset: "+00:00"
+    transitions: []

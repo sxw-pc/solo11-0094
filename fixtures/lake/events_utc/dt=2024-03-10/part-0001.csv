@@ -1,0 +1,4 @@
+event_id,event_time,source_id
+evt-1003,2024-03-10T00:30:00Z,feed-eu
+evt-1004,2024-03-10T22:30:00Z,feed-eu
+evt-1005,not-a-timestamp,feed-eu

@@ -1,0 +1,47 @@
+version: 1
+description: 演示契约：四个数据集覆盖本地墙钟、UTC 瞬时值与显式偏移三类语义。
+rulebook: timezone_rules.yaml
+datasets:
+  - name: orders_local
+    description: 纽约本地墙钟订单事件，夏令时空洞与回拨窗口各有样本。
+    root: fixtures/lake/orders_local
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: events_utc
+    description: 柏林本地日分区的 UTC 瞬时事件，包含跨日错分与无法解析样本。
+    root: fixtures/lake/events_utc
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: Europe/Berlin, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: false}
+
+  - name: sensor_offsets
+    description: 上海时区的显式偏移传感器流，混入零偏移与东京偏移来源。
+    root: fixtures/lake/sensor_offsets
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: offset_aware, zone: Asia/Shanghai, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: true}
+
+  - name: sessions_sydney
+    description: 悉尼本地墙钟会话，覆盖南半球回拨与前拨。
+    root: fixtures/lake/sessions_sydney
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: local_wall, zone: Australia/Sydney, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}

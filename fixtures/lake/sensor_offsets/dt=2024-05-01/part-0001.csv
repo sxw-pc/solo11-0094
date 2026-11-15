@@ -1,0 +1,8 @@
+sensor_id,event_time,source_id
+sen-2001,2024-05-01T08:00:00+08:00,gateway-a
+sen-2002,2024-05-01T09:15:00+08:00,gateway-a
+sen-2003,2024-05-01T10:00:00+00:00,legacy-import
+sen-2004,2024-05-01T11:00:00+09:00,partner-feed
+sen-2005,2024-05-01T12:00:00+08:00,partner-feed
+sen-2006,2024-05-01T13:00:00+08:00,legacy-import
+sen-2007,2024-04-30T15:30:00+00:00,legacy-import

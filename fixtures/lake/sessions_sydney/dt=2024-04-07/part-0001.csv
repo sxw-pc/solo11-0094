@@ -1,0 +1,4 @@
+session_id,event_time,source_id
+ses-3001,2024-04-07T01:30:00,edge-au
+ses-3002,2024-04-07T02:30:00,edge-au
+ses-3003,2024-04-07T03:30:00,edge-au
