@@ -38,6 +38,17 @@ CREATE TABLE artifacts (
 );
 """
 
+_DUAL_SCHEMA = """
+CREATE TABLE dataset_clocks (
+    name TEXT PRIMARY KEY, clock_model TEXT NOT NULL,
+    partition_basis TEXT NOT NULL,
+    event_column TEXT NOT NULL, event_semantics TEXT NOT NULL,
+    event_zone TEXT NOT NULL,
+    arrival_column TEXT NOT NULL, arrival_semantics TEXT NOT NULL,
+    arrival_zone TEXT NOT NULL, max_arrival_lag_seconds INTEGER NOT NULL
+);
+"""
+
 
 def write_ledger(path: Path, report: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -48,6 +59,10 @@ def write_ledger(path: Path, report: dict[str, Any]) -> None:
     try:
         connection = sqlite3.connect(temporary)
         connection.executescript(SCHEMA)
+        if any(item.get("clock_model") == "event_arrival" for item in report["datasets"]):
+            # Only two-clock runs gain the table, keeping legacy ledgers stable.
+            connection.executescript(_DUAL_SCHEMA)
+            _insert_clocks(connection, report)
         _insert_run(connection, report)
         _insert_datasets(connection, report)
         _insert_issues(connection, report)
@@ -122,6 +137,25 @@ def _insert_datasets(connection: sqlite3.Connection, report: dict[str, Any]) -> 
                 dataset["records"],
                 dataset["issues"],
                 ",".join(dataset["observed_offsets"]),
+            ),
+        )
+
+
+def _insert_clocks(connection: sqlite3.Connection, report: dict[str, Any]) -> None:
+    for dataset in sorted(report["datasets"], key=lambda item: item["name"]):
+        if dataset.get("clock_model") != "event_arrival":
+            continue
+        connection.execute(
+            """INSERT INTO dataset_clocks (
+                name, clock_model, partition_basis, event_column, event_semantics,
+                event_zone, arrival_column, arrival_semantics, arrival_zone,
+                max_arrival_lag_seconds
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                dataset["name"], dataset["clock_model"], dataset["partition_basis"],
+                dataset["time_column"], dataset["semantics"], dataset["zone"],
+                dataset["arrival_column"], dataset["arrival_semantics"],
+                dataset["arrival_zone"], dataset["max_arrival_lag_seconds"],
             ),
         )
 

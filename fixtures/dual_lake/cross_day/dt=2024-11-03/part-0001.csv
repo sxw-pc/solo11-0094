@@ -1,0 +1,3 @@
+order_id,event_time,arrival_time,source_id
+ord-2001,2024-11-03T22:30:00,2024-11-03T23:10:00-05:00,web-east
+ord-2002,2024-11-03T23:30:00,2024-11-04T01:05:00-05:00,web-east

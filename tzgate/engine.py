@@ -25,7 +25,9 @@ def run_verification(
     dataset_runs: list[DatasetRun] = []
     for spec in sorted(contract.datasets, key=lambda item: item.name):
         zone = rulebook.zones[spec.time.zone]
-        dataset_runs.append(_verify_dataset(spec, zone))
+        arrival_zone = (
+            rulebook.zones[spec.time.arrival.zone] if spec.time.arrival else None)
+        dataset_runs.append(_verify_dataset(spec, zone, arrival_zone))
     issues = tuple(
         sorted(
             chain.from_iterable(item.issues for item in dataset_runs),
@@ -43,7 +45,9 @@ def run_verification(
     )
 
 
-def _verify_dataset(spec: DatasetSpec, zone: ZoneRules) -> DatasetRun:
+def _verify_dataset(
+    spec: DatasetSpec, zone: ZoneRules, arrival_zone: ZoneRules | None = None
+) -> DatasetRun:
     discovery = discover_dataset(spec)
     issues: list[Issue] = []
     for file_label, reason in discovery.invalid:
@@ -85,7 +89,7 @@ def _verify_dataset(spec: DatasetSpec, zone: ZoneRules) -> DatasetRun:
     record_count = 0
     for file_ref in discovery.files:
         record_count += process_file(
-            spec, zone, file_ref, issues, observed_offsets, tracker
+            spec, zone, file_ref, issues, observed_offsets, tracker, arrival_zone
         )
     if tracker is not None:
         issues.extend(tracker.finalize())

@@ -66,6 +66,16 @@ def render_summary_md(run: RunResult) -> str:
             lines.append(f"| {_code(code)} | {count} |")
     else:
         lines.append("| — | 0 |")
+    dual = [item for item in run.datasets if item.spec.time.dual]
+    if dual:
+        lines += ["", "## 双时钟分区契约", "",
+                  "| 数据集 | 事件列 | 到达列 | 分区依据 | 最大滞后（秒） |",
+                  "| --- | --- | --- | --- | ---: |"]
+        for d in dual:
+            s = d.spec
+            lines.append(f"| {_cell(s.name)} | {_code(s.time.event.column)} | "
+                         f"{_code(s.time.arrival.column)} | {_code(s.partition.basis)} | "
+                         f"{int(s.time.max_arrival_lag.total_seconds())} |")
     lines.append("")
     lines.append("## 问题清单")
     lines.append("")
@@ -90,6 +100,9 @@ def render_summary_md(run: RunResult) -> str:
     lines.append("- `utc_instant`：字段必须带 `Z` 或显式偏移；按规则簿换算为数据集时区的本地日期。")
     lines.append("- `offset_aware`：显式偏移必须与该时刻规则簿偏移一致；同源多偏移会汇总为漂移警告。")
     lines.append("- 分区日界：分区日期必须等于记录在声明时区中的本地日期。")
+    if dual:
+        lines.append("- 双时钟契约：分区依据固定为 `event_local_date` 或 "
+                     "`arrival_local_date`；回拨候选逐个推导到达滞后。")
     lines.append("- 本工具只读输入，不写回湖目录，不发起任何网络请求。")
     lines.append("")
     lines.append("## 复现")

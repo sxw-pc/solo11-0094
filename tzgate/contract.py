@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
 
@@ -11,12 +11,16 @@ import yaml
 
 from .errors import ContractError
 from .io_utils import sha256_bytes
-from .models import Contract, DatasetSpec, PartitionSpec, TimeSpec
+from .models import Contract, DatasetSpec, PartitionSpec, TimeColumn, TimeSpec
 
 SEMANTICS = {"local_wall", "utc_instant", "offset_aware"}
+ARRIVAL_SEMANTICS = {"utc_instant", "offset_aware"}
+PARTITION_BASES = {"zone_local_date", "event_local_date", "arrival_local_date"}
 CHECK_NAMES = {"partition", "dst", "offset"}
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 _DRIVE_RE = re.compile(r"^[A-Za-z]:")
+_LAG_RE = re.compile(r"^(\d+)([smhd])$")
+_LAG_CLOCK_RE = re.compile(r"^(\d{1,3}):([0-5]\d)$")
 
 
 def load_contract(path: Path, root: Path) -> Contract:
@@ -60,9 +64,13 @@ def load_contract(path: Path, root: Path) -> Contract:
 
 
 def validate_zone_references(contract: Contract, zone_names: set[str]) -> None:
-    missing = sorted(
-        {item.time.zone for item in contract.datasets if item.time.zone not in zone_names}
-    )
+    referenced = {
+        column.zone
+        for item in contract.datasets
+        for column in (item.time.event, item.time.arrival)
+        if column is not None
+    }
+    missing = sorted(referenced - zone_names)
     if missing:
         raise ContractError(f"rulebook has no zone definition for: {', '.join(missing)}")
 
@@ -95,6 +103,7 @@ def _parse_dataset(raw: Any, index: int, root: Path) -> DatasetSpec:
         raise ContractError(f"{label}.root is not a directory: {root_label}")
     partition = _parse_partition(item.get("partition"), f"{label}.partition")
     time = _parse_time(item.get("time"), f"{label}.time")
+    _validate_clock_pair(partition, time, f"{label}.time")
     source_column = _parse_source(item.get("source"), f"{label}.source")
     file_glob = _relative_glob(item.get("file_glob", "part-*.csv"), f"{label}.file_glob")
     delimiter = item.get("delimiter", ",")
@@ -132,12 +141,28 @@ def _parse_partition(raw: Any, label: str) -> PartitionSpec:
     except ValueError as exc:
         raise ContractError(f"{label}.date_format is invalid: {exc}") from exc
     basis = item.get("basis", "zone_local_date")
-    if basis != "zone_local_date":
-        raise ContractError(f"{label}.basis only supports zone_local_date")
+    if basis not in PARTITION_BASES:
+        raise ContractError(f"{label}.basis must be one of {sorted(PARTITION_BASES)}")
     return PartitionSpec(pattern=pattern, date_format=date_format, basis=basis)
 
 
 def _parse_time(raw: Any, label: str) -> TimeSpec:
+    item = _mapping(raw, label)
+    if "column" in item:  # legacy single-clock form, kept exactly compatible
+        _only_keys(item, {"column", "format", "semantics", "zone", "required"}, label)
+        return TimeSpec(event=_parse_time_column(item, label, SEMANTICS))
+    _only_keys(item, {"event", "arrival", "max_arrival_lag"}, label)
+    event = _parse_time_column(item.get("event"), f"{label}.event", SEMANTICS)
+    arrival = _parse_time_column(item.get("arrival"), f"{label}.arrival", ARRIVAL_SEMANTICS)
+    if "max_arrival_lag" not in item:
+        raise ContractError(f"{label}.max_arrival_lag is required for a two-clock contract")
+    return TimeSpec(
+        event=event, arrival=arrival,
+        max_arrival_lag=_parse_lag(item.get("max_arrival_lag"), f"{label}.max_arrival_lag"),
+    )
+
+
+def _parse_time_column(raw: Any, label: str, allowed: set[str]) -> TimeColumn:
     item = _mapping(raw, label)
     _only_keys(item, {"column", "format", "semantics", "zone", "required"}, label)
     column = _string(item.get("column"), f"{label}.column")
@@ -147,16 +172,48 @@ def _parse_time(raw: Any, label: str) -> TimeSpec:
     if date_format.lower() != "iso8601" and "%" not in date_format:
         raise ContractError(f"{label}.format must be iso8601 or a strptime pattern")
     semantics = _string(item.get("semantics"), f"{label}.semantics")
-    if semantics not in SEMANTICS:
-        raise ContractError(f"{label}.semantics must be one of {sorted(SEMANTICS)}")
+    if semantics not in allowed:
+        raise ContractError(f"{label}.semantics must be one of {sorted(allowed)}")
     zone = _string(item.get("zone"), f"{label}.zone")
     required = item.get("required", True)
     if not isinstance(required, bool):
         raise ContractError(f"{label}.required must be true or false")
-    return TimeSpec(
+    return TimeColumn(
         column=column, format=date_format, semantics=semantics, zone=zone,
         required=required,
     )
+
+
+def _validate_clock_pair(partition: PartitionSpec, time: TimeSpec, label: str) -> None:
+    """Two-clock contracts must fix which local day owns the partition."""
+    if not time.dual:
+        if partition.basis != "zone_local_date":
+            raise ContractError(
+                f"{label}: partition.basis {partition.basis} requires a two-clock contract"
+            )
+        return
+    if partition.basis == "zone_local_date":
+        raise ContractError(
+            f"{label}: a two-clock contract must set partition.basis to "
+            "event_local_date or arrival_local_date"
+        )
+    if time.arrival.column == time.event.column:
+        raise ContractError(f"{label}: event and arrival columns must differ")
+
+
+def _parse_lag(raw: Any, label: str) -> timedelta:
+    if isinstance(raw, bool) or not isinstance(raw, str):
+        raise ContractError(f"{label} must be a duration such as 6h, 90m or 00:30")
+    match, clock = _LAG_RE.fullmatch(raw.strip()), _LAG_CLOCK_RE.fullmatch(raw.strip())
+    if match is not None:
+        seconds = int(match.group(1)) * {"s": 1, "m": 60, "h": 3600, "d": 86400}[match.group(2)]
+    elif clock is not None:
+        seconds = int(clock.group(1)) * 3600 + int(clock.group(2)) * 60
+    else:
+        raise ContractError(f"{label} must be a duration such as 6h, 90m or 00:30")
+    if seconds <= 0:
+        raise ContractError(f"{label} must be greater than zero")
+    return timedelta(seconds=seconds)
 
 
 def _parse_source(raw: Any, label: str) -> str | None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -13,12 +13,29 @@ SEVERITY_RANK = {"info": 0, "warning": 1, "error": 2}
 
 
 @dataclass(frozen=True)
-class TimeSpec:
+class TimeColumn:
     column: str
     format: str
     semantics: str
     zone: str
     required: bool = True
+
+
+@dataclass(frozen=True)
+class TimeSpec:
+    """One event clock, or an event clock plus the arrival clock."""
+
+    event: TimeColumn
+    arrival: TimeColumn | None = None
+    max_arrival_lag: timedelta | None = None
+
+    column = property(lambda self: self.event.column)
+    format = property(lambda self: self.event.format)
+    semantics = property(lambda self: self.event.semantics)
+    zone = property(lambda self: self.event.zone)
+    required = property(lambda self: self.event.required)
+    dual = property(lambda self: self.arrival is not None)
+
 
 
 @dataclass(frozen=True)
@@ -129,19 +146,25 @@ class DatasetRun:
         return sum(1 for issue in self.issues if issue.severity == "error")
 
     def summary(self) -> dict[str, Any]:
-        observed = sorted(self.observed_offsets)
-        return {
-            "name": self.spec.name,
-            "root": self.spec.root_label,
-            "zone": self.spec.time.zone,
-            "semantics": self.spec.time.semantics,
-            "time_column": self.spec.time.column,
-            "partitions": self.partition_count,
-            "files": self.file_count,
-            "records": self.record_count,
-            "issues": self.issue_count,
-            "observed_offsets": observed,
-        }
+        time = self.spec.time
+        payload = dict(
+            name=self.spec.name, root=self.spec.root_label, zone=time.zone,
+            semantics=time.semantics, time_column=time.column,
+            partitions=self.partition_count, files=self.file_count,
+            records=self.record_count, issues=self.issue_count,
+            observed_offsets=sorted(self.observed_offsets),
+        )
+        if time.arrival is not None:
+            # Only two-clock contracts gain fields; legacy reports keep shape.
+            payload.update(
+                clock_model="event_arrival",
+                partition_basis=self.spec.partition.basis,
+                arrival_column=time.arrival.column,
+                arrival_semantics=time.arrival.semantics,
+                arrival_zone=time.arrival.zone,
+                max_arrival_lag_seconds=int(time.max_arrival_lag.total_seconds()),
+            )
+        return payload
 
 
 @dataclass

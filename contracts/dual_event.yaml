@@ -1,0 +1,80 @@
+version: 1
+description: 双时钟契约（事件日分区路线）：分区日取事件在事件时区中的本地日。
+rulebook: timezone_rules.yaml
+datasets:
+  - name: cross_day
+    description: 纽约跨午夜晚到订单；按事件本地日应落在 11-03，而非到达日 11-04。
+    root: fixtures/dual_lake/cross_day
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 5h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: fold
+    description: 回拨日 01:30 的双候选样本，覆盖全部合规、全部超时、无法唯一判定与顺序无效。
+    root: fixtures/dual_lake/fold
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: late_lag
+    description: 事件日分区正确但到达滞后超限；应告警而非报分区错位。
+    root: fixtures/dual_lake/late_lag
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: gap
+    description: 前拨空洞中的事件墙钟；输入无效，不得误报为分区错位。
+    root: fixtures/dual_lake/gap
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: bad_clocks
+    description: 事件列或到达列缺失/无法解析的隔离样本。
+    root: fixtures/dual_lake/errors
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: no_arrival_column
+    description: 表头缺少到达列。
+    root: fixtures/dual_lake/missing_arrival
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}
+
+  - name: no_event_column
+    description: 表头缺少事件列。
+    root: fixtures/dual_lake/missing_event
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+    checks: {partition: true, dst: true, offset: false}

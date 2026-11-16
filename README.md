@@ -45,6 +45,10 @@ python -m pytest
 | `TZ-DST-AMBIG` | 本地墙钟落入回拨窗口，缺少偏移量 | error |
 | `TZ-OFF-MISMATCH` | 显式偏移 ≠ 规则簿在该时刻的偏移 | error |
 | `TZ-OFF-DRIFT` | 同一来源混用多个偏移量（汇总告警） | warning |
+| `TZ-PART-LAG-001` | 到达日分区路线：所有候选事件时刻的到达滞后均超限 | error |
+| `TZ-PART-LAG-002` | 到达日分区路线：候选滞后部分合规，无法唯一判定 | warning |
+| `TZ-LAG-LATE` / `TZ-LAG-INDETERMINATE` | 事件日分区路线：分区正确但滞后超限/无法唯一判定 | warning |
+| `TZ-LAG-ORDER` | 到达时刻早于所有候选事件时刻，时钟顺序无效 | warning |
 | `TZ-PARSE-001` / `TZ-SHAPE-*` / `TZ-IO-001` | 解析、列结构或读取问题 | error |
 
 每条证据精确到文件、行号、字段与原始文本；issue id 由证据内容哈希得到。
@@ -74,6 +78,29 @@ datasets:
 
 路径必须相对 `--root`，禁止绝对路径、`..`、反斜杠与符号链接逃逸；未知键会直接拒绝，避免静默拼写错误。
 
+### 双时钟：事件时间与到达时间
+
+当同一行的事件发生时刻与落湖到达时刻不同，可以声明两个时间列。`partition.basis` 必须显式固定为 `event_local_date`（事件本地日）或 `arrival_local_date`（到达本地日），不能沿用 `zone_local_date`：
+
+```yaml
+datasets:
+  - name: late_orders
+    root: fixtures/dual_lake/cross_day
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: event_local_date}
+    time:
+      event: {column: event_time, format: iso8601, semantics: local_wall, zone: America/New_York}
+      arrival: {column: arrival_time, format: iso8601, semantics: offset_aware, zone: America/New_York}
+      max_arrival_lag: 2h
+    source: {column: source_id}
+```
+
+- `max_arrival_lag` 支持 `30s` / `90m` / `2h` / `1d` / `00:30`，必须为正。
+- 同一条跨午夜晚到记录，在 `event_local_date` 下落到到达日目录是分区错误；在 `arrival_local_date` 下、滞后未超限则合规。两条路线都合理，契约固定选择，`report.json` 的 `partition_routes`、`summary.md` 与 SQLite `dataset_clocks` 台账都会写明依据。
+- 回拨窗口（如纽约 `2024-11-03 01:30`）有两个候选瞬时。引擎对每个候选分别推导到达滞后，给出“全部合规 / 全部超时 / 无法唯一判定”三种结论，证据列出两个候选与各自滞后，不会任选候选后报告精确滞后。
+- 前拨空洞、到达早于所有候选、列缺失或解析失败分别报 `TZ-DST-GAP`、`TZ-LAG-ORDER`、`TZ-SHAPE-*`、`TZ-PARSE-001`，不会被误报为分区错位。
+
+示例契约：`contracts/dual_event.yaml`（事件日路线）与 `contracts/dual_arrival.yaml`（到达日路线），隔离 fixture 位于 `fixtures/dual_lake/`，与默认演示数据完全分离。
+
 ## 规则簿：不依赖系统 tzdata
 
 `contracts/timezone_rules.yaml` 用「基础偏移 + 严格递增的 UTC transition」声明时区。引擎自己做 UTC→本地、本地→候选瞬时、空洞/回拨窗口推导，因此跨机器、跨 tzdata 版本结果一致。内置 2024 年的 `America/New_York`、`Europe/Berlin`、`Asia/Shanghai`、`Australia/Sydney`、`UTC`；扩展到其他年份只需追加 YAML。
@@ -88,7 +115,7 @@ datasets:
 | `summary.md` | 可评审、可归档的中文摘要 |
 | `issues.csv` | 一行一条证据，便于 diff 与表格处理 |
 | `report.html` | 自包含 HTML，内联 CSS/JS，无外部资源 |
-| `ledger.sqlite3` | 只读复核台使用的 SQLite 台账 |
+| `ledger.sqlite3` | 只读复核台使用的 SQLite 台账（双时钟运行额外含 `dataset_clocks` 表） |
 
 退出码默认 0（发现问题仍视为核验完成）；`--fail-on warning|error` 可在 CI 中变为 1。用法错误返回 2。
 
