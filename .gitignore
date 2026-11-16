@@ -9,3 +9,8 @@ dist/
 wheelhouse/
 .coverage
 .DS_Store
+venv/
+node_modules/
+*.pyc
+.benchmarks/
+.env
