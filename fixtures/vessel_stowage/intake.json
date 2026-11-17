@@ -26,5 +26,6 @@
       "rehandle_cost_cents": 1
     }
   },
-  "objective": "max_freight_cents_minus_rehandle_cost"
+  "objective": "max_freight_cents_minus_rehandle_cost",
+  "max_post_P1_mass_imbalance_tons": 4
 }

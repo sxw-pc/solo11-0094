@@ -12,4 +12,5 @@ def test_verified_manifest_is_only_gross_preview():
     assert data['file_sha256']
     assert preview_gross_manifest(data)=={'count':4,'mass_tons':12,'freight_cents':24}
     assert data['rules']['contracts']['economy_rehandle']['max_rehandles_at_P1']==1
+    assert data['rules']['max_post_P1_mass_imbalance_tons']==4
     assert len(FIXTURES['cargo_manifest']['files'][0][1])==4
