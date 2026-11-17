@@ -1,0 +1,7 @@
+event_time,source_id,document_id,title,owner,updated,license
+2024-07-01T12:00:00Z,archive-1,a,Document A,Public Library,2024-07-01,CC0
+2024-07-01T12:00:00Z,archive-1,b,Document B,Public Library,2024-07-01,CC0
+2024-07-01T12:00:00Z,archive-1,c,Document C,Public Library,2024-07-01,CC0
+2024-07-01T12:00:00Z,archive-1,d,Document D,Public Library,2024-07-01,CC0
+2024-07-01T12:00:00Z,archive-1,e,Document E,Public Library,2024-07-01,
+2024-07-01T12:00:00Z,archive-1,f,Document F,Public Library,2024-07-01,CC0

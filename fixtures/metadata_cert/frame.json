@@ -1,0 +1,32 @@
+{
+  "dataset": "document_metadata",
+  "seed": "lake-metadata-19",
+  "sample_size": 4,
+  "document_ids": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f"
+  ],
+  "contracts": {
+    "full_metadata": {
+      "required_fields": [
+        "title",
+        "owner",
+        "updated",
+        "license"
+      ],
+      "min_population_fraction": "3/4"
+    },
+    "public_index": {
+      "required_fields": [
+        "title",
+        "owner",
+        "updated"
+      ],
+      "min_population_fraction": "3/4"
+    }
+  }
+}
