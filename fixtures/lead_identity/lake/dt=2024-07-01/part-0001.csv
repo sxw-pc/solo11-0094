@@ -1,0 +1,9 @@
+event_time,source_id,lead_id,tenant,email_token,phone_token,account_token,consent,sale_id
+2024-07-01T12:00:00Z,forms-1,r1,A,e1,p1,a1,yes,
+2024-07-01T12:00:00Z,forms-1,r2,A,e1,p2,a2,unknown,S2
+2024-07-01T12:00:00Z,forms-1,r3,A,e2,p2,a3,no,
+2024-07-01T12:00:00Z,forms-1,r4,A,e4,p4,a4,yes,
+2024-07-01T12:00:00Z,forms-1,r5,A,e5,p4,a5,unknown,
+2024-07-01T12:00:00Z,forms-1,r6,A,e6,p6,a5,yes,
+2024-07-01T12:00:00Z,forms-1,r7,A,e7,p6,a7,unknown,S7
+2024-07-01T12:00:00Z,forms-1,r8,B,e7,p6,a7,no,

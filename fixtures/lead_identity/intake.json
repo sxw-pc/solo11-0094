@@ -1,0 +1,31 @@
+{
+  "dataset": "lead_forms",
+  "cannot_link": [
+    [
+      "r1",
+      "r3"
+    ],
+    [
+      "r4",
+      "r6"
+    ],
+    [
+      "r5",
+      "r7"
+    ]
+  ],
+  "contracts": {
+    "person_identity": {
+      "email_evidence": 5,
+      "phone_evidence": 1,
+      "account_evidence": 1,
+      "unit": "individual"
+    },
+    "household_identity": {
+      "email_evidence": 2,
+      "phone_evidence": 6,
+      "account_evidence": 7,
+      "unit": "household"
+    }
+  }
+}

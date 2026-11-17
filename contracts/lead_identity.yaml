@@ -1,0 +1,13 @@
+version: 1
+description: 合成 CRM 表单落湖的 UTC 分区核验与线索实体归属素材。
+rulebook: timezone_rules.yaml
+datasets:
+  - name: lead_forms
+    root: fixtures/lead_identity/lake
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: UTC, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: false}
