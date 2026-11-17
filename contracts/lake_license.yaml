@@ -1,0 +1,31 @@
+version: 1
+description: 合成湖分区许可市场素材。
+rulebook: timezone_rules.yaml
+datasets:
+  - name: license_ca
+    root: fixtures/lake/license_ca
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: UTC, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: false}
+  - name: license_eu
+    root: fixtures/lake/license_eu
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: UTC, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: false}
+  - name: license_us
+    root: fixtures/lake/license_us
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: UTC, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: false}

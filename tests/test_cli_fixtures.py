@@ -90,4 +90,5 @@ def test_fixture_generator_matches_committed(tmp_path: Path, repo_root: Path):
         for path in sorted(target.rglob("*.csv"))
     }
     assert generated == committed
-    assert len(committed) == 11
+    assert len(committed) == 14
+    assert all(f'license_{region}/dt=2024-07-01/part-0001.csv' in committed for region in ('ca', 'eu', 'us'))

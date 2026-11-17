@@ -1,0 +1,62 @@
+{
+  "regions": {
+    "ca": "license_ca",
+    "eu": "license_eu",
+    "us": "license_us"
+  },
+  "bids": [
+    {
+      "bid_id": "b1",
+      "licensee": "lic-1",
+      "regions": [
+        "ca",
+        "eu"
+      ],
+      "value_cents": 2000
+    },
+    {
+      "bid_id": "b2",
+      "licensee": "lic-2",
+      "regions": [
+        "ca"
+      ],
+      "value_cents": 1500
+    },
+    {
+      "bid_id": "b3",
+      "licensee": "lic-3",
+      "regions": [
+        "eu"
+      ],
+      "value_cents": 400
+    },
+    {
+      "bid_id": "b4",
+      "licensee": "lic-4",
+      "regions": [
+        "us"
+      ],
+      "value_cents": 500
+    },
+    {
+      "bid_id": "b6",
+      "licensee": "lic-1",
+      "regions": [
+        "ca"
+      ],
+      "value_cents": 1600
+    },
+    {
+      "bid_id": "b7",
+      "licensee": "lic-1",
+      "regions": [
+        "eu"
+      ],
+      "value_cents": 500
+    }
+  ],
+  "contracts": [
+    "row_weighted",
+    "standalone_floor"
+  ]
+}

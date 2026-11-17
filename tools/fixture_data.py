@@ -111,5 +111,22 @@ FIXTURES = {
                 ),
             ),
         ),
+    },    "license_ca": {
+        "header": ("event_id", "event_time", "source_id"),
+        "files": (("dt=2024-07-01/part-0001.csv",
+                   tuple((f"ca-{i:03d}", "2024-07-01T12:00:00Z", "ca")
+                         for i in range(20))),),
+    },
+    "license_eu": {
+        "header": ("event_id", "event_time", "source_id"),
+        "files": (("dt=2024-07-01/part-0001.csv",
+                   tuple((f"eu-{i:03d}", "2024-07-01T12:00:00Z", "eu")
+                         for i in range(70))),),
+    },
+    "license_us": {
+        "header": ("event_id", "event_time", "source_id"),
+        "files": (("dt=2024-07-01/part-0001.csv",
+                   tuple((f"us-{i:03d}", "2024-07-01T12:00:00Z", "us")
+                         for i in range(160))),),
     },
 }
