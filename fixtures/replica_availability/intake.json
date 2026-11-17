@@ -1,0 +1,72 @@
+{
+  "dataset": "replica_orders",
+  "regions": [
+    {
+      "region_id": "ca",
+      "file": "dt=2024-07-01/part-0001.csv",
+      "replicas": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "region_id": "eu",
+      "file": "dt=2024-07-02/part-0001.csv",
+      "replicas": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "region_id": "us",
+      "file": "dt=2024-07-03/part-0001.csv",
+      "replicas": [
+        "A",
+        "C"
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "A",
+      "harden_cost": 2,
+      "repair_cost": 1
+    },
+    {
+      "node_id": "B",
+      "harden_cost": 6,
+      "repair_cost": 1
+    },
+    {
+      "node_id": "C",
+      "harden_cost": 2,
+      "repair_cost": 1
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "west",
+      "failed_nodes": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "scenario_id": "east",
+      "failed_nodes": [
+        "B",
+        "C"
+      ]
+    }
+  ],
+  "contracts": {
+    "continuous_partition": {
+      "temporary_outage_region": null,
+      "compensation": 0
+    },
+    "eu_repair_window": {
+      "temporary_outage_region": "eu",
+      "compensation": 2
+    }
+  }
+}

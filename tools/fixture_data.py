@@ -111,5 +111,13 @@ FIXTURES = {
                 ),
             ),
         ),
+    },    "replica_orders": {
+        "header": ("order_id", "event_time", "source_id"),
+        "files": (
+            ("dt=2024-07-01/part-0001.csv", (("o-ca", "2024-07-01T12:00:00Z", "ca"),)),
+            ("dt=2024-07-02/part-0001.csv", (("o-eu", "2024-07-02T12:00:00Z", "eu"),)),
+            ("dt=2024-07-03/part-0001.csv", (("o-us", "2024-07-03T12:00:00Z", "us"),)),
+        ),
     },
+
 }

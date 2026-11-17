@@ -90,4 +90,5 @@ def test_fixture_generator_matches_committed(tmp_path: Path, repo_root: Path):
         for path in sorted(target.rglob("*.csv"))
     }
     assert generated == committed
-    assert len(committed) == 11
+    assert len(committed) == 14
+    assert all(f"replica_orders/dt=2024-07-0{day}/part-0001.csv" in committed for day in (1, 2, 3))
