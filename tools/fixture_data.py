@@ -112,4 +112,15 @@ FIXTURES = {
             ),
         ),
     },
+    "basin_monitors": {
+        "header": ("reading_id", "event_time", "source_id", "sensor_id", "load_units"),
+        "files": (("dt=2024-07-01/part-0001.csv", (
+            ("t1-n", "2024-07-01T10:00:00Z", "basin", "north", "7"),
+            ("t1-s", "2024-07-01T10:00:00Z", "basin", "south", "6"),
+            ("t1-t", "2024-07-01T10:00:00Z", "basin", "total", "10"),
+            ("t2-n", "2024-07-01T11:00:00Z", "basin", "north", "8"),
+            ("t2-s", "2024-07-01T11:00:00Z", "basin", "south", "6"),
+            ("t2-t", "2024-07-01T11:00:00Z", "basin", "total", "11"),
+        )),),
+    },
 }

@@ -1,0 +1,62 @@
+{
+  "dataset": "basin_monitors",
+  "dischargers": [
+    "A",
+    "B",
+    "C"
+  ],
+  "sensors": {
+    "north": {
+      "coefficients": [
+        1,
+        1,
+        0
+      ],
+      "bias_coefficient": 1
+    },
+    "south": {
+      "coefficients": [
+        0,
+        1,
+        1
+      ],
+      "bias_coefficient": -1
+    },
+    "total": {
+      "coefficients": [
+        1,
+        1,
+        1
+      ],
+      "bias_coefficient": 0
+    }
+  },
+  "common_bias_values": [
+    -1,
+    0,
+    1
+  ],
+  "bias_constant_across_slots": true,
+  "load_bounds": [
+    0,
+    10
+  ],
+  "contracts": {
+    "individual_fine": {
+      "daily_caps": {
+        "A": 8,
+        "B": 7,
+        "C": 6
+      },
+      "decision": "fine_only_if_same_source_violates_in_every_world"
+    },
+    "collective_remediation": {
+      "daily_caps": {
+        "A": 8,
+        "B": 7,
+        "C": 6
+      },
+      "decision": "order_if_some_source_violates_in_every_world"
+    }
+  }
+}
