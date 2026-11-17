@@ -16,6 +16,9 @@ def test_verified_regions_and_unsafe_single_region_quote():
     assert [(r['region_id'],r['bid_id']) for r in preview['quotes']]==[
         ('ca','b6'),('eu','b7'),('us','b4')]
     assert preview['quoted_total_cents']==2600
+    assert [r['licensee'] for r in preview['quotes']]==['lic-1','lic-1','lic-4']
+    bids={r['bid_id']:r for r in data['bids']}
+    assert bids['b6']['licensee']==bids['b7']['licensee']=='lic-1'
     assert preview['settlement_computed'] is False
 
 
