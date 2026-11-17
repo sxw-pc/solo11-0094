@@ -1,0 +1,30 @@
+{
+  "dataset": "cargo_manifest",
+  "stacks": {
+    "L": [
+      "bottom",
+      "top"
+    ],
+    "R": [
+      "bottom",
+      "top"
+    ]
+  },
+  "max_initial_mass_imbalance_tons": 2,
+  "stack_rule": "top_mass_not_greater_than_bottom_mass",
+  "port_order": [
+    "P1",
+    "P2"
+  ],
+  "contracts": {
+    "express_direct": {
+      "max_rehandles_at_P1": 0,
+      "rehandle_cost_cents": 0
+    },
+    "economy_rehandle": {
+      "max_rehandles_at_P1": 1,
+      "rehandle_cost_cents": 1
+    }
+  },
+  "objective": "max_freight_cents_minus_rehandle_cost"
+}

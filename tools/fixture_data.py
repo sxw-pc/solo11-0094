@@ -112,4 +112,13 @@ FIXTURES = {
             ),
         ),
     },
+    "cargo_manifest": {
+        "header": ("container_id", "event_time", "source_id", "mass_tons", "unload_port", "freight_cents"),
+        "files": (("dt=2024-07-01/part-0001.csv", (
+            ("a", "2024-07-01T10:00:00Z", "terminal", "4", "P1", "8"),
+            ("b", "2024-07-01T10:00:00Z", "terminal", "4", "P2", "7"),
+            ("c", "2024-07-01T10:00:00Z", "terminal", "2", "P1", "5"),
+            ("d", "2024-07-01T10:00:00Z", "terminal", "2", "P2", "4"),
+        )),),
+    },
 }
