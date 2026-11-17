@@ -6,6 +6,21 @@ same-source offset drift.
 """
 
 FIXTURES = {
+    "fare_taps": {
+        "header": ("tap_id", "rider_id", "event_time", "gate_id", "operator", "base_fare_cents"),
+        "files": ((
+            "dt=2024-06-01/part-0001.csv",
+            (
+                ("h1", "H", "2024-06-01T08:00:00Z", "rail-a", "rail", 300),
+                ("h2", "H", "2024-06-01T08:30:00Z", "bus-b", "bus", 140),
+                ("h3", "H", "2024-06-01T08:55:00Z", "ferry-c", "ferry", 360),
+                ("l1a", "L1", "2024-06-01T08:10:00Z", "rail-d", "rail", 100),
+                ("l1b", "L1", "2024-06-01T08:45:00Z", "bus-e", "bus", 160),
+                ("l2a", "L2", "2024-06-01T09:20:00Z", "rail-f", "rail", 100),
+                ("l2b", "L2", "2024-06-01T09:50:00Z", "bus-g", "bus", 160),
+            ),
+        ),),
+    },
     "events_utc": {
         "header": ("event_id", "event_time", "source_id"),
         "files": (

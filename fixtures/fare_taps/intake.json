@@ -1,0 +1,13 @@
+{
+  "dataset": "fare_taps",
+  "transfer_window_minutes": 60,
+  "eligible_pairs": "adjacent_consecutive_taps_only",
+  "tap_reuse_limit": 1,
+  "discount_percent_of_second_leg": 50,
+  "municipal_discount_budget_cents": 180,
+  "operator_discount_budget_cents": {"bus": 160, "ferry": 180, "rail": 0},
+  "contracts": {
+    "aggregate_relief": "maximize total rider fare savings, then riders served",
+    "coverage_first": "maximize number of riders with at least one discount, then total savings"
+  }
+}

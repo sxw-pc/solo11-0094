@@ -1,0 +1,13 @@
+version: 1
+description: Verified synthetic transit fare taps for downstream settlement.
+rulebook: timezone_rules.yaml
+datasets:
+  - name: fare_taps
+    root: fixtures/lake/fare_taps
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: UTC, required: true}
+    source: {column: gate_id}
+    checks: {partition: true, dst: false, offset: false}
