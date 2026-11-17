@@ -1,0 +1,29 @@
+{
+  "dataset": "clearing_debts",
+  "parties": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "external_cash_cents": {
+    "A": 0,
+    "B": 60,
+    "C": 0,
+    "D": 0,
+    "E": 0
+  },
+  "regimes": {
+    "pari_passu": {
+      "within_debtor": "pro_rata_all_claims",
+      "fixed_point": "greatest"
+    },
+    "senior_first": {
+      "within_debtor": "lowest_priority_number_first_then_pro_rata",
+      "fixed_point": "greatest"
+    }
+  },
+  "max_nodes": 6,
+  "max_debts": 12
+}

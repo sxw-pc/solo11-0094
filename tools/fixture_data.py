@@ -112,4 +112,15 @@ FIXTURES = {
             ),
         ),
     },
+    "clearing_debts": {
+        "header": ("debt_id", "event_time", "source_id", "debtor", "creditor", "amount_cents", "priority"),
+        "files": (("dt=2024-07-01/part-0001.csv", (
+            ("ab", "2024-07-01T10:00:00Z", "ledger", "A", "B", "100", "2"),
+            ("ac", "2024-07-01T10:00:00Z", "ledger", "A", "C", "100", "1"),
+            ("ba", "2024-07-01T10:00:00Z", "ledger", "B", "A", "100", "1"),
+            ("cb", "2024-07-01T10:00:00Z", "ledger", "C", "B", "50", "1"),
+            ("de", "2024-07-01T10:00:00Z", "ledger", "D", "E", "30", "1"),
+            ("ed", "2024-07-01T10:00:00Z", "ledger", "E", "D", "30", "1"),
+        )),),
+    },
 }

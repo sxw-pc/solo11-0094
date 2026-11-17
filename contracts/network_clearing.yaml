@@ -1,0 +1,13 @@
+version: 1
+description: 合成互负债务的清算湖表。
+rulebook: timezone_rules.yaml
+datasets:
+  - name: clearing_debts
+    root: fixtures/lake/clearing_debts
+    partition: {pattern: "dt={date}", date_format: "%Y-%m-%d", basis: zone_local_date}
+    file_glob: "part-*.csv"
+    delimiter: ","
+    encoding: "utf-8"
+    time: {column: event_time, format: iso8601, semantics: utc_instant, zone: UTC, required: true}
+    source: {column: source_id}
+    checks: {partition: true, dst: false, offset: false}
