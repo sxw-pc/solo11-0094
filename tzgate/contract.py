@@ -18,7 +18,6 @@ CHECK_NAMES = {"partition", "dst", "offset"}
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 _DRIVE_RE = re.compile(r"^[A-Za-z]:")
 
-
 def load_contract(path: Path, root: Path) -> Contract:
     root = root.resolve()
     if not root.is_dir():
@@ -45,9 +44,7 @@ def load_contract(path: Path, root: Path) -> Contract:
     datasets_raw = document.get("datasets")
     if not isinstance(datasets_raw, list) or not datasets_raw:
         raise ContractError("contract.datasets must be a non-empty list")
-    datasets = tuple(
-        _parse_dataset(item, index, root) for index, item in enumerate(datasets_raw)
-    )
+    datasets = tuple( _parse_dataset(item, index, root) for index, item in enumerate(datasets_raw) )
     names = [item.name for item in datasets]
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
@@ -58,14 +55,10 @@ def load_contract(path: Path, root: Path) -> Contract:
         rulebook_sha256=sha256_bytes(rulebook_bytes), datasets=datasets,
     )
 
-
 def validate_zone_references(contract: Contract, zone_names: set[str]) -> None:
-    missing = sorted(
-        {item.time.zone for item in contract.datasets if item.time.zone not in zone_names}
-    )
+    missing = sorted( {item.time.zone for item in contract.datasets if item.time.zone not in zone_names} )
     if missing:
         raise ContractError(f"rulebook has no zone definition for: {', '.join(missing)}")
-
 
 def _parse_dataset(raw: Any, index: int, root: Path) -> DatasetSpec:
     label = f"datasets[{index}]"
@@ -110,7 +103,6 @@ def _parse_dataset(raw: Any, index: int, root: Path) -> DatasetSpec:
         delimiter=delimiter, encoding=encoding, checks=checks,
     )
 
-
 def _parse_partition(raw: Any, label: str) -> PartitionSpec:
     if raw is None:
         raw = {}
@@ -136,7 +128,6 @@ def _parse_partition(raw: Any, label: str) -> PartitionSpec:
         raise ContractError(f"{label}.basis only supports zone_local_date")
     return PartitionSpec(pattern=pattern, date_format=date_format, basis=basis)
 
-
 def _parse_time(raw: Any, label: str) -> TimeSpec:
     item = _mapping(raw, label)
     _only_keys(item, {"column", "format", "semantics", "zone", "required"}, label)
@@ -153,11 +144,7 @@ def _parse_time(raw: Any, label: str) -> TimeSpec:
     required = item.get("required", True)
     if not isinstance(required, bool):
         raise ContractError(f"{label}.required must be true or false")
-    return TimeSpec(
-        column=column, format=date_format, semantics=semantics, zone=zone,
-        required=required,
-    )
-
+    return TimeSpec( column=column, format=date_format, semantics=semantics, zone=zone, required=required, )
 
 def _parse_source(raw: Any, label: str) -> str | None:
     if raw is None:
@@ -165,7 +152,6 @@ def _parse_source(raw: Any, label: str) -> str | None:
     item = _mapping(raw, label)
     _only_keys(item, {"column"}, label)
     return _string(item.get("column"), f"{label}.column")
-
 
 def _parse_checks(raw: Any, label: str) -> frozenset[str]:
     if raw is None:
@@ -180,7 +166,6 @@ def _parse_checks(raw: Any, label: str) -> frozenset[str]:
             enabled.add(name)
     return frozenset(enabled)
 
-
 def _mapping(value: Any, label: str) -> dict[str, Any]:
     if value is None:
         return {}
@@ -188,18 +173,15 @@ def _mapping(value: Any, label: str) -> dict[str, Any]:
         raise ContractError(f"{label} must be a mapping")
     return value
 
-
 def _only_keys(value: Mapping[str, Any], allowed: set[str], label: str) -> None:
     unknown = sorted(set(value) - allowed)
     if unknown:
         raise ContractError(f"{label} has unknown keys: {', '.join(unknown)}")
 
-
 def _string(value: Any, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ContractError(f"{label} must be a non-empty string")
     return value.strip()
-
 
 def _relative_ref(value: Any, label: str) -> str:
     text = _string(value, label)
@@ -215,7 +197,6 @@ def _relative_ref(value: Any, label: str) -> str:
         raise ContractError(f"{label} must name a subdirectory")
     return normalized
 
-
 def _relative_glob(value: Any, label: str) -> str:
     text = _string(value, label)
     if "\\" in text or text.startswith("/"):
@@ -223,7 +204,6 @@ def _relative_glob(value: Any, label: str) -> str:
     if any(part == ".." for part in PurePosixPath(text).parts):
         raise ContractError(f"{label} must not escape the dataset root")
     return text
-
 
 def _inside(path: Path, root: Path, label: str) -> Path:
     resolved = path.resolve()
@@ -233,6 +213,6 @@ def _inside(path: Path, root: Path, label: str) -> Path:
         raise ContractError(f"{label} must stay inside --root") from exc
     return resolved
 
-
 def _label(path: Path, root: Path) -> str:
     return path.resolve().relative_to(root).as_posix()
+

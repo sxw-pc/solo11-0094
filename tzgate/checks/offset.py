@@ -11,7 +11,6 @@ from ..rulebook import ZoneRules
 from ..timestamp import ParsedTimestamp
 from .common import make_issue
 
-
 @dataclass(frozen=True)
 class Observation:
     source: str
@@ -20,20 +19,13 @@ class Observation:
     expected: timedelta
     instant: datetime
 
-
 @dataclass
 class OffsetTracker:
     """Collect offset evidence per source so drift is reported once."""
 
     observations: dict[str, list[Observation]] = field(default_factory=dict)
 
-    def observe(
-        self,
-        ctx: RecordContext,
-        actual: timedelta,
-        expected: timedelta,
-        instant: datetime,
-    ) -> None:
+    def observe( self, ctx: RecordContext, actual: timedelta, expected: timedelta, instant: datetime, ) -> None:
         source = _source_name(ctx.source)
         self.observations.setdefault(source, []).append(
             Observation(
@@ -66,10 +58,7 @@ class OffsetTracker:
                 "mismatch_count": len(mismatches),
                 "first_mismatch_utc": utc_text(first.instant),
             }
-            message = (
-                f"来源 {source} 在同一时间列混用了多个偏移量 {', '.join(observed)}，"
-                f"其中 {len(mismatches)} 条与规则簿不一致"
-            )
+            message = ( f"来源 {source} 在同一时间列混用了多个偏移量 {', '.join(observed)}，" f"其中 {len(mismatches)} 条与规则簿不一致" )
             issues.append(
                 make_issue(
                     first.ctx,
@@ -81,7 +70,6 @@ class OffsetTracker:
                 )
             )
         return issues
-
 
 def check_offset_aware(
     zone: ZoneRules,
@@ -105,21 +93,8 @@ def check_offset_aware(
         "zone": zone.name,
         "source": ctx.source,
     }
-    message = (
-        f"显式偏移 {format_offset(parsed.offset)} 与规则簿中 {zone.name} "
-        f"在该时刻的偏移 {format_offset(expected)} 不一致"
-    )
-    return [
-        make_issue(
-            ctx,
-            code="TZ-OFF-MISMATCH",
-            severity="error",
-            check="offset",
-            message=message,
-            details=details,
-        )
-    ]
-
+    message = ( f"显式偏移 {format_offset(parsed.offset)} 与规则簿中 {zone.name} " f"在该时刻的偏移 {format_offset(expected)} 不一致" )
+    return [ make_issue( ctx, code="TZ-OFF-MISMATCH", severity="error", check="offset", message=message, details=details, ) ]
 
 def _source_name(source: str | None) -> str:
     if source is None:
@@ -127,3 +102,4 @@ def _source_name(source: str | None) -> str:
     if not source:
         return "(空来源)"
     return source
+

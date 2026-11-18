@@ -14,11 +14,7 @@ from .pages import render_error, render_index, render_issue, render_not_found
 
 HOST = "127.0.0.1"
 _ALLOWED_FILTERS = ("dataset", "code", "severity")
-_CSP = (
-    "default-src 'none'; style-src 'unsafe-inline'; "
-    "form-action 'self'; base-uri 'none'"
-)
-
+_CSP = ( "default-src 'none'; style-src 'unsafe-inline'; " "form-action 'self'; base-uri 'none'" )
 
 class ConsoleServer(ThreadingHTTPServer):
     daemon_threads = True
@@ -27,7 +23,6 @@ class ConsoleServer(ThreadingHTTPServer):
     def __init__(self, address, handler, ledger: Ledger):
         self.ledger = ledger
         super().__init__(address, handler)
-
 
 class ConsoleHandler(BaseHTTPRequestHandler):
     server_version = "tzgate-console/0.1.0"
@@ -75,15 +70,8 @@ class ConsoleHandler(BaseHTTPRequestHandler):
         )
         for issue in issues:
             issue["check"] = issue.pop("check_name")
-        payload = {
-            "run": self.server.ledger.run(),
-            "filters": filters,
-            "count": len(issues),
-            "issues": issues,
-        }
-        body = json.dumps(
-            payload, ensure_ascii=False, sort_keys=True, indent=2
-        ).encode("utf-8")
+        payload = { "run": self.server.ledger.run(), "filters": filters, "count": len(issues), "issues": issues, }
+        body = json.dumps( payload, ensure_ascii=False, sort_keys=True, indent=2 ).encode("utf-8")
         self._send(200, body + b"\n", "application/json; charset=utf-8")
 
     def _send_html(self, status: int, body: str) -> None:
@@ -104,7 +92,6 @@ class ConsoleHandler(BaseHTTPRequestHandler):
         if body:
             self.wfile.write(body)
 
-
 def make_server(out_dir: Path, port: int = 0) -> ConsoleServer:
     _validate_port(port)
     ledger = Ledger(Path(out_dir) / "ledger.sqlite3")
@@ -114,7 +101,6 @@ def make_server(out_dir: Path, port: int = 0) -> ConsoleServer:
         ledger.close()
         raise ConsoleError(f"cannot bind {HOST}:{port}: {exc}") from exc
     return server
-
 
 def serve_console(out_dir: Path, port: int = 0) -> int:
     server = make_server(out_dir, port)
@@ -129,13 +115,11 @@ def serve_console(out_dir: Path, port: int = 0) -> int:
         server.ledger.close()
     return 0
 
-
 def _validate_port(port: int) -> None:
     if isinstance(port, bool) or not isinstance(port, int):
         raise ConsoleError("port must be an integer")
     if not 0 <= port <= 65535:
         raise ConsoleError("port must be between 0 and 65535")
-
 
 def _filters(query: str) -> dict[str, str]:
     parsed = parse_qs(query, keep_blank_values=False)
@@ -145,3 +129,4 @@ def _filters(query: str) -> dict[str, str]:
         if values:
             filters[name] = values[0][:200]
     return filters
+

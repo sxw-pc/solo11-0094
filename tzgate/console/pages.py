@@ -13,7 +13,6 @@ from .data import Ledger
 
 _STATUS = {"fail": "FAIL", "warn": "WARN", "pass": "PASS"}
 
-
 def render_index(ledger: Ledger, filters: dict[str, str]) -> str:
     run = ledger.run()
     datasets = ledger.datasets()
@@ -62,14 +61,11 @@ def render_index(ledger: Ledger, filters: dict[str, str]) -> str:
     ]
     return "\n".join(body)
 
-
 def render_issue(ledger: Ledger, issue_id: str) -> str | None:
     issue = ledger.issue(issue_id)
     if issue is None:
         return None
-    details = json.dumps(
-        issue["details"], ensure_ascii=False, indent=2, sort_keys=True
-    )
+    details = json.dumps( issue["details"], ensure_ascii=False, indent=2, sort_keys=True )
     rows = [
         ("issue_id", issue["issue_id"]),
         ("级别", issue["severity"]),
@@ -105,14 +101,11 @@ def render_issue(ledger: Ledger, issue_id: str) -> str | None:
     )
     return "\n".join(parts)
 
-
 def render_not_found(message: str) -> str:
     return _simple_page("404", message)
 
-
 def render_error(message: str) -> str:
     return _simple_page("复核台错误", message)
-
 
 def _dataset_table(datasets: list[dict[str, Any]]) -> str:
     rows = [
@@ -138,7 +131,6 @@ def _dataset_table(datasets: list[dict[str, Any]]) -> str:
     rows.append("</tbody></table></div>")
     return "\n".join(rows)
 
-
 def _filters(facets: dict[str, list[str]], filters: dict[str, str]) -> str:
     return "\n".join(
         [
@@ -157,7 +149,6 @@ def _filters(facets: dict[str, list[str]], filters: dict[str, str]) -> str:
         ]
     )
 
-
 def _select(name: str, label: str, values: Iterable[str], current: str) -> str:
     options = sorted(set(values))
     if current and current not in options:
@@ -169,7 +160,6 @@ def _select(name: str, label: str, values: Iterable[str], current: str) -> str:
         parts.append(f'<option value="{_e(value)}"{selected}>{_e(value)}</option>')
     parts.append("</select></label>")
     return "".join(parts)
-
 
 def _issue_table(issues: list[dict[str, Any]]) -> str:
     if not issues:
@@ -197,16 +187,9 @@ def _issue_table(issues: list[dict[str, Any]]) -> str:
     rows.append("</tbody></table></div>")
     return "\n".join(rows)
 
-
 def _card(label: str, value: Any, tone: str) -> str:
     tone_class = f" {tone}" if tone else ""
-    return (
-        '<div class="card">'
-        f'<div class="label">{_e(label)}</div>'
-        f'<div class="value{tone_class}">{_e(value)}</div>'
-        "</div>"
-    )
-
+    return ( '<div class="card">' f'<div class="label">{_e(label)}</div>' f'<div class="value{tone_class}">{_e(value)}</div>' "</div>" )
 
 def _head(title: str) -> list[str]:
     return [
@@ -217,7 +200,6 @@ def _head(title: str) -> list[str]:
         f"<style>{BASE_CSS}{CONSOLE_CSS}</style>",
         "</head><body>",
     ]
-
 
 def _simple_page(title: str, message: str) -> str:
     return "\n".join(
@@ -231,6 +213,6 @@ def _simple_page(title: str, message: str) -> str:
         ]
     )
 
-
 def _e(value: object) -> str:
     return html.escape(str(value), quote=True)
+

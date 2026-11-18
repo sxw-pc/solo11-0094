@@ -8,10 +8,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
-
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -20,28 +18,14 @@ def sha256_file(path: Path) -> str:
             digest.update(chunk)
     return digest.hexdigest()
 
-
 def canonical_json_text(value: Any) -> str:
     """Stable pretty JSON used by report.json and fixture checks."""
 
-    text = json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        indent=2,
-        separators=(",", ": "),
-    )
+    text = json.dumps( value, ensure_ascii=False, sort_keys=True, indent=2, separators=(",", ": "), )
     return text + "\n"
 
-
 def canonical_json_line(value: Any) -> str:
-    return json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-
+    return json.dumps( value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), )
 
 def atomic_write_bytes(path: Path, data: bytes) -> None:
     """Write to a sibling temporary file, then replace atomically.
@@ -65,10 +49,8 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
             except OSError:
                 pass
 
-
 def atomic_write_text(path: Path, text: str) -> None:
     atomic_write_bytes(path, text.encode("utf-8"))
-
 
 def clip(text: str, limit: int = 512) -> str:
     """Bound evidence stored in reports while making truncation explicit."""
@@ -77,6 +59,6 @@ def clip(text: str, limit: int = 512) -> str:
         return text
     return text[:limit] + "…[truncated]"
 
-
 def as_posix(path: Path) -> str:
     return path.as_posix()
+

@@ -11,7 +11,6 @@ from typing import Any, Mapping
 SEVERITIES = ("error", "warning", "info")
 SEVERITY_RANK = {"info": 0, "warning": 1, "error": 2}
 
-
 @dataclass(frozen=True)
 class TimeSpec:
     column: str
@@ -20,13 +19,11 @@ class TimeSpec:
     zone: str
     required: bool = True
 
-
 @dataclass(frozen=True)
 class PartitionSpec:
     pattern: str
     date_format: str
     basis: str = "zone_local_date"
-
 
 @dataclass(frozen=True)
 class DatasetSpec:
@@ -44,7 +41,6 @@ class DatasetSpec:
     def check_enabled(self, name: str) -> bool:
         return name in self.checks
 
-
 @dataclass(frozen=True)
 class Contract:
     label: str
@@ -54,7 +50,6 @@ class Contract:
     rulebook_path: Path
     rulebook_sha256: str
     datasets: tuple[DatasetSpec, ...]
-
 
 @dataclass(frozen=True)
 class RecordContext:
@@ -66,7 +61,6 @@ class RecordContext:
     zone: str
     partition_date: date
     source: str | None = None
-
 
 @dataclass(frozen=True)
 class Issue:
@@ -85,14 +79,7 @@ class Issue:
 
     @property
     def sort_key(self) -> tuple[Any, ...]:
-        return (
-            self.dataset,
-            self.file,
-            self.line,
-            self.column,
-            self.code,
-            self.issue_id,
-        )
+        return ( self.dataset, self.file, self.line, self.column, self.code, self.issue_id, )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -109,7 +96,6 @@ class Issue:
             "message": self.message,
             "details": dict(self.details),
         }
-
 
 @dataclass
 class DatasetRun:
@@ -142,7 +128,6 @@ class DatasetRun:
             "issues": self.issue_count,
             "observed_offsets": observed,
         }
-
 
 @dataclass
 class RunResult:
@@ -184,14 +169,13 @@ class RunResult:
             "by_code": self.by_code,
         }
 
-
 def utc_text(value: datetime) -> str:
     """Render a UTC instant without relying on the host locale."""
 
     return value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-
 def local_text(value: datetime) -> str:
     """Render a naive local wall time without a timezone suffix."""
 
     return value.strftime("%Y-%m-%dT%H:%M:%S")
+

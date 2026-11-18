@@ -38,7 +38,6 @@ CREATE TABLE artifacts (
 );
 """
 
-
 def write_ledger(path: Path, report: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + ".tmp")
@@ -65,7 +64,6 @@ def write_ledger(path: Path, report: dict[str, Any]) -> None:
             connection.close()
             if temporary.exists():
                 temporary.unlink()
-
 
 def _insert_run(connection: sqlite3.Connection, report: dict[str, Any]) -> None:
     summary = report["summary"]
@@ -103,7 +101,6 @@ def _insert_run(connection: sqlite3.Connection, report: dict[str, Any]) -> None:
         ),
     )
 
-
 def _insert_datasets(connection: sqlite3.Connection, report: dict[str, Any]) -> None:
     for dataset in sorted(report["datasets"], key=lambda item: item["name"]):
         connection.execute(
@@ -124,7 +121,6 @@ def _insert_datasets(connection: sqlite3.Connection, report: dict[str, Any]) -> 
                 ",".join(dataset["observed_offsets"]),
             ),
         )
-
 
 def _insert_issues(connection: sqlite3.Connection, report: dict[str, Any]) -> None:
     for issue in report["issues"]:
@@ -149,8 +145,8 @@ def _insert_issues(connection: sqlite3.Connection, report: dict[str, Any]) -> No
             ),
         )
 
-
 def _insert_artifacts(connection: sqlite3.Connection, report: dict[str, Any]) -> None:
     for artifact in sorted(report.get("artifacts", []), key=lambda item: item["name"]):
         row = (artifact["name"], artifact["sha256"], artifact["bytes"])
         connection.execute("INSERT INTO artifacts (name, sha256, bytes) VALUES (?, ?, ?)", row)
+

@@ -12,13 +12,7 @@ from .ingest import plain_issue, process_file
 from .models import DatasetRun, DatasetSpec, Issue, RunResult
 from .rulebook import ZoneRules, load_rulebook
 
-
-def run_verification(
-    contract_path: Path,
-    root: Path,
-    run_id: str,
-    generated_at: str | None = None,
-) -> RunResult:
+def run_verification( contract_path: Path, root: Path, run_id: str, generated_at: str | None = None, ) -> RunResult:
     contract = load_contract(contract_path, root)
     rulebook = load_rulebook(contract.rulebook_path, contract.rulebook_sha256)
     validate_zone_references(contract, set(rulebook.zones))
@@ -26,12 +20,7 @@ def run_verification(
     for spec in sorted(contract.datasets, key=lambda item: item.name):
         zone = rulebook.zones[spec.time.zone]
         dataset_runs.append(_verify_dataset(spec, zone))
-    issues = tuple(
-        sorted(
-            chain.from_iterable(item.issues for item in dataset_runs),
-            key=lambda item: item.sort_key,
-        )
-    )
+    issues = tuple( sorted( chain.from_iterable(item.issues for item in dataset_runs), key=lambda item: item.sort_key, ) )
     return RunResult(
         run_id=run_id,
         generated_at=generated_at,
@@ -41,7 +30,6 @@ def run_verification(
         files_scanned=sum(item.file_count for item in dataset_runs),
         records_scanned=sum(item.record_count for item in dataset_runs),
     )
-
 
 def _verify_dataset(spec: DatasetSpec, zone: ZoneRules) -> DatasetRun:
     discovery = discover_dataset(spec)
@@ -76,17 +64,11 @@ def _verify_dataset(spec: DatasetSpec, zone: ZoneRules) -> DatasetRun:
                 details={"pattern": spec.partition.pattern},
             )
         )
-    tracker = (
-        OffsetTracker()
-        if spec.source_column is not None and spec.check_enabled("offset")
-        else None
-    )
+    tracker = ( OffsetTracker() if spec.source_column is not None and spec.check_enabled("offset") else None )
     observed_offsets: set[str] = set()
     record_count = 0
     for file_ref in discovery.files:
-        record_count += process_file(
-            spec, zone, file_ref, issues, observed_offsets, tracker
-        )
+        record_count += process_file( spec, zone, file_ref, issues, observed_offsets, tracker )
     if tracker is not None:
         issues.extend(tracker.finalize())
     return DatasetRun(
@@ -97,3 +79,4 @@ def _verify_dataset(spec: DatasetSpec, zone: ZoneRules) -> DatasetRun:
         issues=issues,
         observed_offsets=observed_offsets,
     )
+

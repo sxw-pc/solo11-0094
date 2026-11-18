@@ -111,3 +111,4 @@ nav.tabs a.active { background: var(--accent-soft); border-color: var(--accent);
 .back { display: inline-block; margin-bottom: 14px; }
 .error-box { padding: 18px; border: 1px solid var(--danger); border-radius: 10px; background: var(--danger-soft); color: var(--danger); }
 """
+

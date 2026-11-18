@@ -19,18 +19,15 @@ from .errors import RulebookError
 from .io_utils import sha256_bytes
 from .offsets import OffsetSyntaxError, format_offset, parse_offset
 
-
 @dataclass(frozen=True)
 class Transition:
     at_utc: datetime
     offset: timedelta
 
-
 @dataclass(frozen=True)
 class Candidate:
     offset: timedelta
     instant_utc: datetime
-
 
 @dataclass(frozen=True)
 class LocalResolution:
@@ -39,7 +36,6 @@ class LocalResolution:
     candidates: tuple[Candidate, ...]
     window_start: datetime | None = None
     window_end: datetime | None = None
-
 
 @dataclass(frozen=True)
 class ZoneRules:
@@ -83,13 +79,7 @@ class ZoneRules:
             kind = "normal"
         else:
             kind = "ambiguous"
-        return LocalResolution(
-            kind=kind,
-            wall=wall,
-            candidates=ordered,
-            window_start=window_start,
-            window_end=window_end,
-        )
+        return LocalResolution( kind=kind, wall=wall, candidates=ordered, window_start=window_start, window_end=window_end, )
 
     def _window_for(self, wall: datetime) -> tuple[datetime | None, datetime | None]:
         current = self.base_offset
@@ -107,12 +97,10 @@ class ZoneRules:
         local = instant.astimezone(timezone.utc) + self.offset_at_utc(instant)
         return local.date()
 
-
 @dataclass(frozen=True)
 class Rulebook:
     zones: Mapping[str, ZoneRules]
     sha256: str
-
 
 def load_rulebook(path: Path, expected_sha256: str) -> Rulebook:
     try:
@@ -128,7 +116,6 @@ def load_rulebook(path: Path, expected_sha256: str) -> Rulebook:
         raise RulebookError(f"rulebook is not valid UTF-8 YAML: {exc}") from exc
     return _parse_rulebook(raw, digest)
 
-
 def _parse_rulebook(raw: Any, digest: str) -> Rulebook:
     root = _mapping(raw, "rulebook")
     _only_keys(root, {"version", "zones", "description"}, "rulebook")
@@ -143,7 +130,6 @@ def _parse_rulebook(raw: Any, digest: str) -> Rulebook:
             raise RulebookError("zone names must be non-empty strings")
         zones[name] = _parse_zone(name, zone_raw)
     return Rulebook(zones=zones, sha256=digest)
-
 
 def _parse_zone(name: str, raw: Any) -> ZoneRules:
     zone = _mapping(raw, f"zone {name}")
@@ -172,18 +158,15 @@ def _parse_zone(name: str, raw: Any) -> ZoneRules:
         current = offset
     return ZoneRules(name=name, base_offset=base, transitions=tuple(transitions))
 
-
 def _mapping(value: Any, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise RulebookError(f"{label} must be a mapping")
     return value
 
-
 def _only_keys(value: Mapping[str, Any], allowed: set[str], label: str) -> None:
     unknown = sorted(set(value) - allowed)
     if unknown:
         raise RulebookError(f"{label} has unknown keys: {', '.join(unknown)}")
-
 
 def _offset(value: Any, label: str) -> timedelta:
     if not isinstance(value, str):
@@ -192,7 +175,6 @@ def _offset(value: Any, label: str) -> timedelta:
         return parse_offset(value)
     except OffsetSyntaxError as exc:
         raise RulebookError(f"{label}: {exc}") from exc
-
 
 def _utc(value: Any, label: str) -> datetime:
     if isinstance(value, datetime):
@@ -210,3 +192,4 @@ def _utc(value: Any, label: str) -> datetime:
     if moment.tzinfo is None or moment.utcoffset() is None:
         raise RulebookError(f"{label} must include Z or an explicit offset")
     return moment.astimezone(timezone.utc)
+

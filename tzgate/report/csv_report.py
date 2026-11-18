@@ -7,20 +7,7 @@ import io
 
 from ..models import RunResult
 
-HEADER = (
-    "issue_id",
-    "code",
-    "severity",
-    "dataset",
-    "check",
-    "file",
-    "line",
-    "column",
-    "raw",
-    "zone",
-    "message",
-)
-
+HEADER = ( "issue_id", "code", "severity", "dataset", "check", "file", "line", "column", "raw", "zone", "message", )
 
 def render_issues_csv(run: RunResult) -> str:
     buffer = io.StringIO(newline="")
@@ -43,3 +30,4 @@ def render_issues_csv(run: RunResult) -> str:
             )
         )
     return buffer.getvalue()
+

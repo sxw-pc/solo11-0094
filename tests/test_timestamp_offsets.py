@@ -8,7 +8,6 @@ from tzgate.errors import TimestampParseError
 from tzgate.offsets import OffsetSyntaxError, format_offset, parse_offset
 from tzgate.timestamp import parse_timestamp
 
-
 @pytest.mark.parametrize(
     ("text", "offset_minutes", "wall", "instant"),
     [
@@ -33,18 +32,15 @@ def test_iso8601(text, offset_minutes, wall, instant):
         assert parsed.offset == timedelta(minutes=offset_minutes)
         assert parsed.instant_utc == instant.replace(tzinfo=timezone.utc)
 
-
 def test_strptime_format():
     parsed = parse_timestamp("2024/05/01 08:00:00 +0800", "%Y/%m/%d %H:%M:%S %z")
     assert parsed.offset == timedelta(hours=8)
     assert parsed.instant_utc == datetime(2024, 5, 1, 0, tzinfo=timezone.utc)
 
-
 @pytest.mark.parametrize("text", ["", "   ", "not-a-time", "2024-13-01T00:00:00Z"])
 def test_parse_errors(text):
     with pytest.raises(TimestampParseError):
         parse_timestamp(text, "iso8601")
-
 
 def test_offsets_round_trip():
     for text, delta, formatted in [
@@ -57,8 +53,8 @@ def test_offsets_round_trip():
         assert parse_offset(text) == delta
         assert format_offset(delta) == formatted
 
-
 @pytest.mark.parametrize("text", ["", "08:00", "+24:00", "+08:60", "UTC"])
 def test_offset_errors(text):
     with pytest.raises(OffsetSyntaxError):
         parse_offset(text)
+

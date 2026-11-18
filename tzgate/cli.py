@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from datetime import datetime, timezone
@@ -20,12 +21,8 @@ _DEFAULT_OUT = "out/demo"
 _DEFAULT_RUN_ID = "demo-001"
 _FAIL_THRESHOLD = {"none": 99, "warning": 1, "error": 2}
 
-
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="tzgate",
-        description="时界核验台：离线核验时间语义、偏移、夏令时与分区日界。",
-    )
+    parser = argparse.ArgumentParser( prog="tzgate", description="时界核验台：离线核验时间语义、偏移、夏令时与分区日界。", )
     parser.add_argument("--version", action="version", version=f"tzgate {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
     verify = subparsers.add_parser("verify", help="运行核验并写出全部报告产物")
@@ -34,24 +31,14 @@ def build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--out", default=_DEFAULT_OUT, help="输出目录")
     verify.add_argument("--run-id", default=_DEFAULT_RUN_ID, help="确定性运行编号")
     verify.add_argument("--generated-at", default=None, help="可选的注入式生成时间")
-    verify.add_argument(
-        "--fail-on",
-        choices=("none", "warning", "error"),
-        default="none",
-        help="达到该级别时以状态码 1 退出（默认不因问题退出）",
-    )
+    verify.add_argument( "--frame", default=None, help="事前抽样 frame JSON；提供后密封不可覆盖承诺并签发总体证书", )
+    verify.add_argument( "--fail-on", choices=("none", "warning", "error"), default="none", help="达到该级别时以状态码 1 退出（默认不因问题退出）", )
     console = subparsers.add_parser("console", help="启动只读本地复核台")
     console.add_argument("--out", default=_DEFAULT_OUT, help="包含台账的输出目录")
-    console.add_argument(
-        "--port",
-        type=_port,
-        default=0,
-        help="127.0.0.1 监听端口；0 表示由系统分配",
-    )
+    console.add_argument( "--port", type=_port, default=0, help="127.0.0.1 监听端口；0 表示由系统分配", )
     summary = subparsers.add_parser("summary", help="打印已生成的 Markdown 摘要")
     summary.add_argument("--out", default=_DEFAULT_OUT, help="输出目录")
     return parser
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
@@ -71,17 +58,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     return 2
 
-
 def _verify(args: argparse.Namespace) -> int:
     run_id = _run_id(args.run_id)
     generated_at = _generated_at(args.generated_at)
-    run, outputs = execute_verification(
-        Path(args.contract),
-        Path(args.root),
-        Path(args.out),
-        run_id,
-        generated_at,
-    )
+    frame_path = Path(args.frame) if args.frame else None
+    run, outputs = execute_verification( Path(args.contract), Path(args.root), Path(args.out), run_id, generated_at, frame_path, )
     severity = run.by_severity
     print(
         "tzgate verify: "
@@ -98,37 +79,52 @@ def _verify(args: argparse.Namespace) -> int:
         f"{_join(args.out, 'report.html')}, "
         f"{_join(args.out, 'ledger.sqlite3')}"
     )
+    if frame_path is not None:
+        _print_certificates(outputs)
     if run.by_code:
         top = ", ".join(f"{code}={count}" for code, count in list(run.by_code.items())[:6])
         print(f"  issue codes: {top}")
-        print(
-            f"  review: python -m tzgate console --out {args.out} --port 0"
-        )
+        print( f"  review: python -m tzgate console --out {args.out} --port 0" )
     threshold = _FAIL_THRESHOLD[args.fail_on]
     highest = max((SEVERITY_RANK[level] for level in run.by_severity if run.by_severity[level]), default=-1)
     if threshold != 99 and highest >= threshold:
         return 1
     return 0
 
+def _print_certificates(outputs) -> None:
+    if outputs.certificate_json is None or outputs.commitment_json is None:
+        return
+    commitment = json.loads(outputs.commitment_json.read_text(encoding="utf-8"))
+    certificates = json.loads(outputs.certificate_json.read_text(encoding="utf-8"))
+    print(
+        "  sample commitment: "
+        f"{commitment['frame_size']} docs, seed={commitment['seed']}, "
+        f"draw={','.join(commitment['selected_ids'])} "
+        f"sha256 {commitment['commitment_sha256'][:16]}…"
+    )
+    for certificate in certificates:
+        print(
+            f"  certificate {certificate['contract_name']}: "
+            f"N={certificate['frame_size']} n={certificate['sample_size']} "
+            f"x={certificate['observed_successes']} "
+            f"lower_bound={certificate['lower_bound_fraction']} "
+            f"threshold={certificate['threshold_text']} "
+            f"decision={certificate['decision']}"
+        )
+        print(f"    reason: {certificate['reason']}")
 
 def _summary(out_dir: Path) -> int:
     path = out_dir / "summary.md"
     if not path.is_file():
-        raise InputError(
-            f"summary.md not found in {out_dir}; run the verify command first"
-        )
+        raise InputError( f"summary.md not found in {out_dir}; run the verify command first" )
     sys.stdout.write(path.read_text(encoding="utf-8"))
     return 0
-
 
 def _run_id(value: str) -> str:
     text = value.strip()
     if _RUN_ID_RE.fullmatch(text) is None:
-        raise InputError(
-            "run id must be 1-128 characters of letters, digits, dot, underscore, colon or dash"
-        )
+        raise InputError( "run id must be 1-128 characters of letters, digits, dot, underscore, colon or dash" )
     return text
-
 
 def _generated_at(value: str | None) -> str | None:
     if value is None:
@@ -145,7 +141,6 @@ def _generated_at(value: str | None) -> str | None:
         return moment.strftime("%Y-%m-%dT%H:%M:%S")
     return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-
 def _port(value: str) -> int:
     try:
         port = int(value)
@@ -155,6 +150,6 @@ def _port(value: str) -> int:
         raise argparse.ArgumentTypeError("port must be between 0 and 65535")
     return port
 
-
 def _join(out: str, name: str) -> str:
     return f"{out.rstrip('/')}/{name}" if out else name
+

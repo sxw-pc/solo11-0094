@@ -18,7 +18,6 @@ from fixture_data import FIXTURES
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = REPO_ROOT / "fixtures" / "lake"
 
-
 def build_content() -> dict[str, bytes]:
     content: dict[str, bytes] = {}
     for dataset in sorted(FIXTURES):
@@ -32,7 +31,6 @@ def build_content() -> dict[str, bytes]:
             content[f"{dataset}/{relative}"] = buffer.getvalue().encode("utf-8")
     return content
 
-
 def check(out_dir: Path) -> int:
     content = build_content()
     problems: list[str] = []
@@ -43,11 +41,7 @@ def check(out_dir: Path) -> int:
         elif path.read_bytes() != expected:
             problems.append(f"outdated: {relative}")
     if out_dir.is_dir():
-        actual = {
-            path.relative_to(out_dir).as_posix()
-            for path in out_dir.rglob("*.csv")
-            if path.is_file()
-        }
+        actual = { path.relative_to(out_dir).as_posix() for path in out_dir.rglob("*.csv") if path.is_file() }
         expected_names = set(content)
         for relative in sorted(actual - expected_names):
             problems.append(f"unexpected: {relative}")
@@ -58,7 +52,6 @@ def check(out_dir: Path) -> int:
     print(f"fixtures: ok ({len(content)} files under {out_dir.name}/)")
     return 0
 
-
 def generate(out_dir: Path) -> int:
     content = build_content()
     for relative, data in sorted(content.items()):
@@ -68,20 +61,15 @@ def generate(out_dir: Path) -> int:
     print(f"fixtures: wrote {len(content)} files under {out_dir}")
     return 0
 
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="compare without writing; exit 1 when fixtures differ",
-    )
+    parser.add_argument( "--check", action="store_true", help="compare without writing; exit 1 when fixtures differ", )
     args = parser.parse_args(argv)
     if args.check:
         return check(args.out.resolve())
     return generate(args.out.resolve())
 
-
 if __name__ == "__main__":
     raise SystemExit(main())
+

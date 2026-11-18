@@ -1,5 +1,11 @@
 version: 1
-description: 合成湖表文档元数据抽样素材。
+description: >-
+  合成湖表文档元数据抽样素材。document_metadata 为 UTC 语义湖表；配套
+  fixtures/metadata_cert/frame.json 在读取样本行内容前密封事前抽样承诺
+  （全部 document_id、seed、无放回抽中名单、schema 合同、run_id 与工具版本
+  摘要），承诺不可覆盖，事后不得重选 seed、更换合同或补抽。每份证书仅针对
+  一种事前声明的 schema 合同，以无放回超几何尾概率精算 90% 单边总体合格数
+  下界，达到合同最低 3/4 方可发布，否则标记证据不足。
 rulebook: timezone_rules.yaml
 datasets:
   - name: document_metadata

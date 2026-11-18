@@ -5,12 +5,7 @@ from __future__ import annotations
 import csv
 from datetime import date
 
-from .checks import (
-    OffsetTracker,
-    check_local_wall,
-    check_offset_aware,
-    check_partition,
-)
+from .checks import ( OffsetTracker, check_local_wall, check_offset_aware, check_partition, )
 from .checks.common import make_issue
 from .discovery import FileRef
 from .errors import TimestampParseError
@@ -20,7 +15,6 @@ from .rulebook import ZoneRules
 from .timestamp import parse_timestamp
 
 _EPOCH = date(1970, 1, 1)
-
 
 def process_file(
     spec: DatasetSpec,
@@ -37,13 +31,9 @@ def process_file(
             reader = csv.reader(handle, delimiter=spec.delimiter)
             header = next(reader, None)
             if header is None:
-                issues.append(
-                    _file_issue(spec, file_ref, 1, "", "TZ-SHAPE-001", "文件为空，缺少表头")
-                )
+                issues.append( _file_issue(spec, file_ref, 1, "", "TZ-SHAPE-001", "文件为空，缺少表头") )
                 return 0
-            normalized = [
-                cell.lstrip("\N{ZERO WIDTH NO-BREAK SPACE}").strip() for cell in header
-            ]
+            normalized = [ cell.lstrip("\N{ZERO WIDTH NO-BREAK SPACE}").strip() for cell in header ]
             if spec.time.column not in normalized:
                 issues.append(
                     _file_issue(
@@ -98,17 +88,7 @@ def process_file(
                 try:
                     parsed = parse_timestamp(raw, spec.time.format)
                 except TimestampParseError as exc:
-                    issues.append(
-                        _file_issue(
-                            spec,
-                            file_ref,
-                            line_no,
-                            spec.time.column,
-                            raw,
-                            "TZ-PARSE-001",
-                            f"时间字段无法按契约格式解析：{exc}",
-                        )
-                    )
+                    issues.append( _file_issue( spec, file_ref, line_no, spec.time.column, raw, "TZ-PARSE-001", f"时间字段无法按契约格式解析：{exc}", ) )
                     continue
                 if parsed.offset is not None:
                     observed_offsets.add(format_offset(parsed.offset))
@@ -127,33 +107,14 @@ def process_file(
                 )
                 issues.extend(_check_record(spec, zone, parsed, ctx, tracker))
     except UnicodeError as exc:
-        issues.append(
-            _file_issue(
-                spec,
-                file_ref,
-                1,
-                "",
-                "",
-                "TZ-IO-001",
-                f"文件不是有效的 {spec.encoding} 文本：{exc}",
-            )
-        )
+        issues.append( _file_issue( spec, file_ref, 1, "", "", "TZ-IO-001", f"文件不是有效的 {spec.encoding} 文本：{exc}", ) )
     except csv.Error as exc:
         line_no = reader.line_num if reader is not None else 1
-        issues.append(
-            _file_issue(
-                spec, file_ref, line_no, "", "", "TZ-IO-001", f"CSV 解析失败：{exc}"
-            )
-        )
+        issues.append( _file_issue( spec, file_ref, line_no, "", "", "TZ-IO-001", f"CSV 解析失败：{exc}" ) )
     except OSError as exc:
         reason = exc.strerror or exc.__class__.__name__
-        issues.append(
-            _file_issue(
-                spec, file_ref, 1, "", "", "TZ-IO-001", f"文件读取失败：{reason}"
-            )
-        )
+        issues.append( _file_issue( spec, file_ref, 1, "", "", "TZ-IO-001", f"文件读取失败：{reason}" ) )
     return count
-
 
 def plain_issue(
     spec: DatasetSpec,
@@ -177,15 +138,7 @@ def plain_issue(
         zone=spec.time.zone,
         partition_date=_EPOCH,
     )
-    return make_issue(
-        ctx,
-        code=code,
-        severity=severity,
-        check=check,
-        message=message,
-        details=details,
-    )
-
+    return make_issue( ctx, code=code, severity=severity, check=check, message=message, details=details, )
 
 def _check_record(spec, zone, parsed, ctx, tracker) -> list[Issue]:
     semantics = spec.time.semantics
@@ -227,16 +180,7 @@ def _check_record(spec, zone, parsed, ctx, tracker) -> list[Issue]:
         issues.extend(check_offset_aware(zone, parsed, ctx, tracker))
     return issues
 
-
-def _file_issue(
-    spec: DatasetSpec,
-    file_ref: FileRef,
-    line: int,
-    column: str,
-    raw: str,
-    code: str,
-    message: str,
-) -> Issue:
+def _file_issue( spec: DatasetSpec, file_ref: FileRef, line: int, column: str, raw: str, code: str, message: str, ) -> Issue:
     if code.startswith("TZ-SHAPE"):
         check = "shape"
     elif code.startswith("TZ-PARSE"):
@@ -255,3 +199,4 @@ def _file_issue(
         message=message,
         details={"partition": file_ref.partition_label},
     )
+

@@ -7,10 +7,7 @@ from typing import Any
 from ..models import RunResult
 from ..version import __version__
 
-
-def build_report(
-    run: RunResult, artifacts: list[dict[str, Any]] | None = None
-) -> dict[str, Any]:
+def build_report( run: RunResult, artifacts: list[dict[str, Any]] | None = None ) -> dict[str, Any]:
     run_meta: dict[str, Any] = {"run_id": run.run_id}
     if run.generated_at is not None:
         run_meta["generated_at"] = run.generated_at
@@ -33,3 +30,4 @@ def build_report(
     if artifacts is not None:
         report["artifacts"] = sorted(artifacts, key=lambda item: item["name"])
     return report
+

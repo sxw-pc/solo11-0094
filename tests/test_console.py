@@ -12,7 +12,6 @@ import pytest
 from tzgate.console.server import make_server
 from tzgate.errors import ConsoleError
 
-
 def _request(base: str, path: str, method: str = "GET"):
     request = urllib.request.Request(base + path, method=method)
     try:
@@ -20,7 +19,6 @@ def _request(base: str, path: str, method: str = "GET"):
             return response.status, dict(response.headers), response.read()
     except urllib.error.HTTPError as error:
         return error.code, dict(error.headers), error.read()
-
 
 @pytest.fixture()
 def console(outputs):
@@ -36,12 +34,10 @@ def console(outputs):
         server.ledger.close()
         thread.join(timeout=5)
 
-
 def test_console_is_loopback_only(console):
     server, _base = console
     assert server.server_address[0] == "127.0.0.1"
     assert server.server_port > 0
-
 
 def test_console_pages_and_api(console):
     _server, base = console
@@ -74,7 +70,6 @@ def test_console_pages_and_api(console):
     assert "结构化证据" in detail
     assert first["raw"] in detail
 
-
 def test_console_404_405_and_traversal(console):
     _server, base = console
     assert _request(base, "/missing")[0] == 404
@@ -83,7 +78,6 @@ def test_console_404_405_and_traversal(console):
     status, headers, _body = _request(base, "/", method="POST")
     assert status == 405
     assert headers["Allow"] == "GET"
-
 
 def test_ledger_rejects_writes(outputs):
     uri = outputs.ledger.as_uri() + "?mode=ro&immutable=1"
@@ -94,8 +88,8 @@ def test_ledger_rejects_writes(outputs):
     finally:
         connection.close()
 
-
 @pytest.mark.parametrize("port", [-1, 65536, True])
 def test_invalid_ports(outputs, port):
     with pytest.raises(ConsoleError):
         make_server(outputs.out_dir, port)
+

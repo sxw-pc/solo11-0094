@@ -11,7 +11,6 @@ from .style import BASE_CSS
 
 _STATUS_LABEL = {"fail": "FAIL", "warn": "WARN", "pass": "PASS"}
 
-
 def render_html(run: RunResult) -> str:
     severity = run.by_severity
     status = run.status
@@ -98,16 +97,9 @@ def render_html(run: RunResult) -> str:
     ]
     return "\n".join(parts)
 
-
 def _card(label: str, value: Any, tone: str) -> str:
     tone_class = f" {tone}" if tone else ""
-    return (
-        '<div class="card">'
-        f'<div class="label">{_e(label)}</div>'
-        f'<div class="value{tone_class}">{_e(value)}</div>'
-        "</div>"
-    )
-
+    return ( '<div class="card">' f'<div class="label">{_e(label)}</div>' f'<div class="value{tone_class}">{_e(value)}</div>' "</div>" )
 
 def _dataset_table(run: RunResult) -> str:
     rows: list[str] = [
@@ -135,7 +127,6 @@ def _dataset_table(run: RunResult) -> str:
     rows.append("</tbody></table></div>")
     return "\n".join(rows)
 
-
 def _code_table(run: RunResult) -> str:
     if not run.by_code:
         return '<div class="empty">未发现问题。</div>'
@@ -144,7 +135,6 @@ def _code_table(run: RunResult) -> str:
         rows.append(f"<tr><td><code>{_e(code)}</code></td><td class=\"num\">{count}</td></tr>")
     rows.append("</tbody></table></div>")
     return "\n".join(rows)
-
 
 def _issue_table(run: RunResult) -> str:
     if not run.issues:
@@ -173,6 +163,6 @@ def _issue_table(run: RunResult) -> str:
     rows.append("</tbody></table></div>")
     return "\n".join(rows)
 
-
 def _e(value: object) -> str:
     return html.escape(str(value), quote=True)
+

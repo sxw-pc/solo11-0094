@@ -7,7 +7,6 @@ from datetime import datetime, timedelta, timezone
 
 from .errors import TimestampParseError
 
-
 @dataclass(frozen=True)
 class ParsedTimestamp:
     text: str
@@ -18,7 +17,6 @@ class ParsedTimestamp:
     @property
     def has_offset(self) -> bool:
         return self.instant_utc is not None
-
 
 def parse_timestamp(text: str, date_format: str) -> ParsedTimestamp:
     value = text.strip()
@@ -35,22 +33,12 @@ def parse_timestamp(text: str, date_format: str) -> ParsedTimestamp:
         offset = moment.utcoffset()
         if offset is None or offset.total_seconds() % 60 != 0:
             raise TimestampParseError("explicit offset must have minute granularity")
-        return ParsedTimestamp(
-            text=value,
-            wall=moment.replace(tzinfo=None),
-            instant_utc=moment.astimezone(timezone.utc),
-            offset=offset,
-        )
-    return ParsedTimestamp(
-        text=value,
-        wall=moment.replace(tzinfo=None),
-        instant_utc=None,
-        offset=None,
-    )
-
+        return ParsedTimestamp( text=value, wall=moment.replace(tzinfo=None), instant_utc=moment.astimezone(timezone.utc), offset=offset, )
+    return ParsedTimestamp( text=value, wall=moment.replace(tzinfo=None), instant_utc=None, offset=None, )
 
 def _parse_iso8601(value: str) -> datetime:
     normalized = value
     if normalized.endswith(("Z", "z")):
         normalized = normalized[:-1] + "+00:00"
     return datetime.fromisoformat(normalized)
+

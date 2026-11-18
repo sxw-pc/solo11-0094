@@ -5,12 +5,7 @@ from __future__ import annotations
 from ..models import RunResult
 from ..version import __version__
 
-_STATUS_LABEL = {
-    "fail": "FAIL（存在阻断级时间语义问题）",
-    "warn": "WARN（仅有警告）",
-    "pass": "PASS（未发现问题）",
-}
-
+_STATUS_LABEL = { "fail": "FAIL（存在阻断级时间语义问题）", "warn": "WARN（仅有警告）", "pass": "PASS（未发现问题）", }
 
 def render_summary_md(run: RunResult) -> str:
     lines: list[str] = []
@@ -24,29 +19,19 @@ def render_summary_md(run: RunResult) -> str:
     if run.generated_at is not None:
         lines.append(f"| 生成时间（注入） | {_code(run.generated_at)} |")
     lines.append(f"| 工具版本 | {_code('tzgate ' + __version__)} |")
-    lines.append(
-        f"| 契约 | {_code(run.contract.label)}<br>sha256 `{run.contract.sha256}` |"
-    )
-    lines.append(
-        f"| 规则簿 | {_code(run.contract.rulebook_label)}"
-        f"<br>sha256 `{run.contract.rulebook_sha256}` |"
-    )
+    lines.append( f"| 契约 | {_code(run.contract.label)}<br>sha256 `{run.contract.sha256}` |" )
+    lines.append( f"| 规则簿 | {_code(run.contract.rulebook_label)}" f"<br>sha256 `{run.contract.rulebook_sha256}` |" )
     lines.append(
         f"| 数据集 / 分区 / 文件 / 记录 | {len(run.datasets)} / "
         f"{sum(item.partition_count for item in run.datasets)} / "
         f"{run.files_scanned} / {run.records_scanned} |"
     )
     severity = run.by_severity
-    lines.append(
-        f"| 问题 | {len(run.issues)} 条（error={severity['error']}, "
-        f"warning={severity['warning']}, info={severity['info']}） |"
-    )
+    lines.append( f"| 问题 | {len(run.issues)} 条（error={severity['error']}, " f"warning={severity['warning']}, info={severity['info']}） |" )
     lines.append("")
     lines.append("## 数据集概览")
     lines.append("")
-    lines.append(
-        "| 数据集 | 时区 | 语义 | 分区 | 文件 | 记录 | 问题 | 观测偏移 |"
-    )
+    lines.append( "| 数据集 | 时区 | 语义 | 分区 | 文件 | 记录 | 问题 | 观测偏移 |" )
     lines.append("| --- | --- | --- | ---: | ---: | ---: | ---: | --- |")
     for dataset in run.datasets:
         offsets = ", ".join(sorted(dataset.observed_offsets)) or "—"
@@ -95,23 +80,19 @@ def render_summary_md(run: RunResult) -> str:
     lines.append("## 复现")
     lines.append("")
     lines.append("```sh")
-    lines.append(
-        f"python -m tzgate verify --contract {run.contract.label} --root . "
-        f"--out <OUT> --run-id {run.run_id}"
-    )
+    lines.append( f"python -m tzgate verify --contract {run.contract.label} --root . " f"--out <OUT> --run-id {run.run_id}" )
     lines.append("```")
     lines.append("")
     return "\n".join(lines)
-
 
 def _cell(value: object) -> str:
     text = str(value).replace("\r", " ").replace("\n", " ")
     text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return text.replace("|", "\\|")
 
-
 def _code(value: object) -> str:
     text = _cell(value)
     if "`" in text:
         return text.replace("`", "'")
     return f"`{text}`"
+

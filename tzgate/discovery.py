@@ -10,14 +10,12 @@ from pathlib import Path
 from .errors import DiscoveryError
 from .models import DatasetSpec
 
-
 @dataclass(frozen=True)
 class FileRef:
     path: Path
     label: str
     partition_date: date
     partition_label: str
-
 
 @dataclass(frozen=True)
 class Partition:
@@ -26,13 +24,11 @@ class Partition:
     label: str
     files: tuple[FileRef, ...]
 
-
 @dataclass(frozen=True)
 class DiscoveryResult:
     partitions: tuple[Partition, ...]
     files: tuple[FileRef, ...]
     invalid: tuple[tuple[str, str], ...]
-
 
 def discover_dataset(spec: DatasetSpec) -> DiscoveryResult:
     root = spec.root_path
@@ -59,38 +55,17 @@ def discover_dataset(spec: DatasetSpec) -> DiscoveryResult:
             continue
         files, file_invalid = _discover_files(spec, child, partition_date)
         invalid.extend(file_invalid)
-        partitions.append(
-            Partition(
-                date=partition_date,
-                name=child.name,
-                label=_label(child, root, spec),
-                files=tuple(files),
-            )
-        )
-    flattened = tuple(
-        file_ref for partition in partitions for file_ref in partition.files
-    )
-    return DiscoveryResult(
-        partitions=tuple(partitions),
-        files=flattened,
-        invalid=tuple(invalid),
-    )
+        partitions.append( Partition( date=partition_date, name=child.name, label=_label(child, root, spec), files=tuple(files), ) )
+    flattened = tuple( file_ref for partition in partitions for file_ref in partition.files )
+    return DiscoveryResult( partitions=tuple(partitions), files=flattened, invalid=tuple(invalid), )
 
-
-def _discover_files(
-    spec: DatasetSpec, partition_dir: Path, partition_date: date
-) -> tuple[list[FileRef], list[tuple[str, str]]]:
+def _discover_files( spec: DatasetSpec, partition_dir: Path, partition_date: date ) -> tuple[list[FileRef], list[tuple[str, str]]]:
     files: list[FileRef] = []
     invalid: list[tuple[str, str]] = []
     try:
-        matches = sorted(
-            partition_dir.glob(spec.file_glob),
-            key=lambda item: item.relative_to(partition_dir).as_posix(),
-        )
+        matches = sorted( partition_dir.glob(spec.file_glob), key=lambda item: item.relative_to(partition_dir).as_posix(), )
     except OSError as exc:
-        raise DiscoveryError(
-            f"cannot list partition {_label(partition_dir, spec.root_path, spec)}: {exc}"
-        ) from exc
+        raise DiscoveryError( f"cannot list partition {_label(partition_dir, spec.root_path, spec)}: {exc}" ) from exc
     for path in matches:
         if not path.is_file() or path.is_symlink():
             if path.is_file() and path.is_symlink():
@@ -112,13 +87,9 @@ def _discover_files(
         )
     return files, invalid
 
-
 def _partition_regex(pattern: str) -> re.Pattern[str]:
     prefix, suffix = pattern.split("{date}")
-    return re.compile(
-        "^" + re.escape(prefix) + r"(?P<date>[^/\\]+)" + re.escape(suffix) + "$"
-    )
-
+    return re.compile( "^" + re.escape(prefix) + r"(?P<date>[^/\\]+)" + re.escape(suffix) + "$" )
 
 def _parse_partition_date(value: str, date_format: str) -> date | None:
     try:
@@ -129,10 +100,10 @@ def _parse_partition_date(value: str, date_format: str) -> date | None:
         return None
     return parsed
 
-
 def _label(path: Path, root: Path, spec: DatasetSpec) -> str:
     try:
         relative = path.relative_to(root).as_posix()
     except ValueError:
         return f"{spec.root_label}/{path.name}"
     return f"{spec.root_label}/{relative}"
+

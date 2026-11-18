@@ -1,3 +1,4 @@
 """Single source of truth for the tool version."""
 
 __version__ = "0.1.0"
+

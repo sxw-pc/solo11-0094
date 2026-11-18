@@ -11,10 +11,8 @@ from datetime import timedelta
 
 _OFFSET_RE = re.compile(r"^([+-])(\d{2}):?(\d{2})$")
 
-
 class OffsetSyntaxError(ValueError):
     """Raised when an offset is not a minute-granularity UTC offset."""
-
 
 def parse_offset(text: str) -> timedelta:
     """Parse ``Z``, ``+HH:MM``, ``-HH:MM``, ``+HHMM`` or ``-HHMM``."""
@@ -35,7 +33,6 @@ def parse_offset(text: str) -> timedelta:
     delta = timedelta(hours=hours, minutes=minutes)
     return -delta if sign == "-" else delta
 
-
 def format_offset(offset: timedelta) -> str:
     """Format a minute-granularity offset as ``+HH:MM`` or ``-HH:MM``."""
 
@@ -47,3 +44,4 @@ def format_offset(offset: timedelta) -> str:
     if total_minutes >= 24 * 60:
         raise OffsetSyntaxError("offset is outside the supported range")
     return f"{sign}{total_minutes // 60:02d}:{total_minutes % 60:02d}"
+

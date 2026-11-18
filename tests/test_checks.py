@@ -2,14 +2,8 @@ from __future__ import annotations
 
 from tzgate.models import SEVERITIES
 
-
 def _issues(run, code=None, raw=None):
-    return [
-        issue
-        for issue in run.issues
-        if (code is None or issue.code == code) and (raw is None or issue.raw == raw)
-    ]
-
+    return [ issue for issue in run.issues if (code is None or issue.code == code) and (raw is None or issue.raw == raw) ]
 
 def test_fixture_summary(run_result):
     run = run_result
@@ -27,7 +21,6 @@ def test_fixture_summary(run_result):
     assert {issue.severity for issue in run.issues} == {"error", "warning"}
     assert run.by_severity.keys() == set(SEVERITIES)
 
-
 def test_dst_gap_evidence(run_result):
     issues = _issues(run_result, "TZ-DST-GAP", "2024-03-10T02:30:00")
     assert len(issues) == 1
@@ -41,7 +34,6 @@ def test_dst_gap_evidence(run_result):
     assert issue.details["window_end"] == "2024-03-10T03:00:00"
     assert issue.details["candidates"] == []
 
-
 def test_dst_fold_evidence(run_result):
     issues = _issues(run_result, "TZ-DST-AMBIG", "2024-11-03T01:30:00")
     assert len(issues) == 1
@@ -51,11 +43,9 @@ def test_dst_fold_evidence(run_result):
     assert issue.details["window_start"] == "2024-11-03T01:00:00"
     assert issue.details["window_end"] == "2024-11-03T02:00:00"
 
-
 def test_southern_hemisphere_dst(run_result):
     assert len(_issues(run_result, "TZ-DST-AMBIG", "2024-04-07T02:30:00")) == 1
     assert len(_issues(run_result, "TZ-DST-GAP", "2024-10-06T02:30:00")) == 1
-
 
 def test_partition_alignment(run_result):
     issue = _issues(run_result, "TZ-PART-001", "2024-03-09T23:30:00Z")[0]
@@ -72,15 +62,10 @@ def test_partition_alignment(run_result):
     assert len(_issues(run_result, "TZ-PART-001", "2024-09-01T00:30:00Z")) == 1
     assert len(_issues(run_result, "TZ-PART-001", "2024-04-30T15:30:00+00:00")) == 1
 
-
 def test_offset_mismatch_and_drift(run_result):
     mismatches = _issues(run_result, "TZ-OFF-MISMATCH")
     assert len(mismatches) == 3
-    assert {issue.raw for issue in mismatches} == {
-        "2024-05-01T10:00:00+00:00",
-        "2024-05-01T11:00:00+09:00",
-        "2024-04-30T15:30:00+00:00",
-    }
+    assert {issue.raw for issue in mismatches} == { "2024-05-01T10:00:00+00:00", "2024-05-01T11:00:00+09:00", "2024-04-30T15:30:00+00:00", }
     first = _issues(run_result, "TZ-OFF-MISMATCH", "2024-05-01T10:00:00+00:00")[0]
     assert first.details["declared_offset"] == "+00:00"
     assert first.details["expected_offset"] == "+08:00"
@@ -94,20 +79,17 @@ def test_offset_mismatch_and_drift(run_result):
     assert by_source["partner-feed"].details["observed_offsets"] == ["+08:00", "+09:00"]
     assert all(issue.severity == "warning" for issue in drift)
 
-
 def test_parse_error_and_shape_metadata(run_result):
     issue = _issues(run_result, "TZ-PARSE-001", "not-a-timestamp")[0]
     assert issue.line == 4
     assert issue.check == "parse"
     assert issue.details["partition"].endswith("dt=2024-03-10")
 
-
 def test_issues_are_unique_and_sorted(run_result):
     ids = [issue.issue_id for issue in run_result.issues]
     assert len(ids) == len(set(ids))
     keys = [issue.sort_key for issue in run_result.issues]
     assert keys == sorted(keys)
-
 
 def test_datasets_and_observed_offsets(run_result):
     by_name = {item.spec.name: item for item in run_result.datasets}
@@ -117,3 +99,4 @@ def test_datasets_and_observed_offsets(run_result):
     assert by_name["sessions_sydney"].record_count == 7
     assert by_name["sensor_offsets"].observed_offsets == {"+00:00", "+08:00", "+09:00"}
     assert by_name["orders_local"].observed_offsets == set()
+
