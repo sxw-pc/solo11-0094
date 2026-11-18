@@ -35,3 +35,11 @@ class LedgerError(TzGateError):
 
 class ConsoleError(TzGateError):
     """The read-only console cannot be started."""
+
+
+class SettlementError(TzGateError):
+    """A transfer-subsidy clearing input or invariant is invalid."""
+
+
+class StaleSettlementError(SettlementError):
+    """A cached settlement no longer matches the verified lake or contract."""
