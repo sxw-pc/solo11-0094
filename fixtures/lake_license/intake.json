@@ -4,6 +4,25 @@
     "eu": "license_eu",
     "us": "license_us"
   },
+  "owners": {
+    "ca": "owner-ca",
+    "eu": "owner-eu",
+    "us": "owner-us"
+  },
+  "files": {
+    "ca": {
+      "sha256": "70b3ef82f4d28e1487466e3a545ce08127a6393edfc55ef2546405766b5a1781",
+      "size_bytes": 650
+    },
+    "eu": {
+      "sha256": "4d12ff2660d9d753445453003ff436abd9cace25713a4b8378428a7d41be2167",
+      "size_bytes": 2200
+    },
+    "us": {
+      "sha256": "3a4558d0d73b63af891d007eff2e8707adf502d345fc1568deb2108ebec68378",
+      "size_bytes": 4990
+    }
+  },
   "bids": [
     {
       "bid_id": "b1",
