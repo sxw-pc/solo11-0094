@@ -92,6 +92,22 @@ datasets:
 
 退出码默认 0（发现问题仍视为核验完成）；`--fail-on warning|error` 可在 CI 中变为 1。用法错误返回 2。
 
+## 流域污染归责：联合可能世界反推
+
+`tzgate attribute` 在已核验的流域监测读数上做**精确反推**，不接受单偏差名义预览充当法律结论：
+
+```sh
+python -m tzgate attribute --contract contracts/basin_attribution.yaml \
+  --root . --intake fixtures/basin_attribution/intake.json \
+  --out out/basin --run-id basin-check
+```
+
+- 传感器矩阵（如 `north=A+B+b`、`south=B+C-b`、`total=A+B+C`）与校准偏差候选在 `intake.json` 声明；同一个偏差 `b` 必须贯穿全部时段，禁止逐时段或逐传感器重选。
+- 有界精确搜索（源负荷 0..10 整数、至多 3 排放者/4 时段/5 监测点/3 偏差候选，带区间剪枝、无外部求解服务）枚举全部**联合**可行世界；欠定时给出可独立核验的逐时段笛卡尔积紧凑证明，绝不把各主体独立上下界拼成不存在的共同世界。
+- `individual_fine` 仅当同一主体在**每个**可行世界都超上限才开罚；`collective_remediation` 仅当**每个**可行世界都存在某个超限主体才发整治令——两组量词次序不可交换。
+- 合成 fixture 的三个共同世界 `b=-1/0/+1` 对应日负荷 `(A,B,C)=(11,6,4)/(9,6,6)/(7,6,8)`：个人罚单不成立（零偏差预览若直罚 A 即错），流域整治令必须发出。
+- 证据含已核契约/规则簿/运行摘要与文件 SHA、传感器矩阵、共同偏差、可行世界或紧凑证明、各主体日负荷上下界（带见证世界）、两份合同结论（成立附支持见证，不成立附反例世界），写入 `basin_attribution.json` 与 `attribution_ledger.sqlite3`。合格文件一旦变动，反推得到的可行世界与法律结论随之改变，旧归责不可沿用。
+
 ## 确定性与只读
 
 - 同一输入、契约、`--run-id` 下，`report.json`、`summary.md`、`issues.csv`、`report.html`、`ledger.sqlite3` 逐字节一致；测试用不同 `PYTHONHASHSEED` 交叉验证。
@@ -129,11 +145,11 @@ python -m pytest
 
 ## 测试与规模
 
-`python -m pytest` 覆盖规则簿换算、空洞/回拨、三类检测、报告转义、SQLite 台账、只读复核台、fixture 重生成、字节级确定性、`PYTHONHASHSEED` 变异、输入只读与输出路径防护。每个 Python 源文件 ≤ 300 行；全部 Python 代码约 4.1k 行（含测试与 fixture 生成器）。
+`python -m pytest` 覆盖规则簿换算、空洞/回拨、三类检测、报告转译、SQLite 台账、只读复核台、fixture 重生成、字节级确定性、`PYTHONHASHSEED` 变异、输入只读与输出路径防护，以及流域联合可能世界反推的量词次序、共同偏差约束、欠定矩阵与失效检测。每个 Python 源文件 ≤ 300 行；全部 Python 代码约 5.4k 行（含测试与 fixture 生成器）。
 
 ## 目录
 
-`tzgate/` 核验引擎、规则簿、报告、台账、只读复核台；`contracts/` 默认契约与时区规则簿；`fixtures/lake/` 合成湖目录（只读输入）；`tools/` fixture 生成/校验脚本；`tests/` 测试；`Makefile` 演示与测试入口。
+`tzgate/` 核验引擎、规则簿、报告、台账、只读复核台与 `basin/` 联合世界归责包；`contracts/` 默认契约、流域契约与时区规则簿；`fixtures/lake/` 合成湖目录（只读输入），`fixtures/basin_attribution/` 传感器矩阵与法律合同声明；`tools/` fixture 生成/校验脚本；`tests/` 测试；`Makefile` 演示与测试入口。
 
 ## 边界与限制
 

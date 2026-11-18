@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .io_utils import canonical_json_line
+from .io_utils import canonical_json_line, sha256_bytes
 
 SCHEMA = """
 CREATE TABLE run (
@@ -35,6 +35,18 @@ CREATE TABLE issues (
 );
 CREATE TABLE artifacts (
     name TEXT PRIMARY KEY, sha256 TEXT NOT NULL, bytes INTEGER NOT NULL
+);
+CREATE TABLE attribution_runs (
+    run_id TEXT PRIMARY KEY, contract_sha256 TEXT NOT NULL,
+    rulebook_sha256 TEXT NOT NULL, source_file TEXT NOT NULL,
+    source_file_sha256 TEXT NOT NULL, evidence_sha256 TEXT NOT NULL,
+    feasible_biases_json TEXT NOT NULL, joint_world_count INTEGER NOT NULL,
+    worlds_materialized INTEGER NOT NULL
+);
+CREATE TABLE attribution_decisions (
+    run_id TEXT NOT NULL, contract_name TEXT NOT NULL, day TEXT NOT NULL,
+    decision_rule TEXT NOT NULL, outcome TEXT NOT NULL,
+    detail_json TEXT NOT NULL, PRIMARY KEY (run_id, contract_name, day)
 );
 """
 
@@ -154,3 +166,77 @@ def _insert_artifacts(connection: sqlite3.Connection, report: dict[str, Any]) ->
     for artifact in sorted(report.get("artifacts", []), key=lambda item: item["name"]):
         row = (artifact["name"], artifact["sha256"], artifact["bytes"])
         connection.execute("INSERT INTO artifacts (name, sha256, bytes) VALUES (?, ?, ?)", row)
+
+
+def insert_attribution_rows(
+    connection: sqlite3.Connection, evidence: dict[str, Any], evidence_sha256: str
+) -> None:
+    connection.execute(
+        """INSERT INTO attribution_runs (
+            run_id, contract_sha256, rulebook_sha256, source_file,
+            source_file_sha256, evidence_sha256, feasible_biases_json,
+            joint_world_count, worlds_materialized
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            evidence["run_id"],
+            evidence["contract"]["sha256"],
+            evidence["rulebook"]["sha256"],
+            evidence["source_file"]["path"],
+            evidence["source_file"]["sha256"],
+            evidence_sha256,
+            canonical_json_line(evidence["feasible_biases"]),
+            evidence["joint_world_count"],
+            1 if evidence["worlds_materialized"] else 0,
+        ),
+    )
+    for name in sorted(evidence["legal_decisions"]):
+        decision = evidence["legal_decisions"][name]
+        for conclusion in decision["conclusions"]:
+            outcome = conclusion.get("outcome")
+            if outcome is None:
+                outcome = (
+                    "order" if conclusion.get("fines_issued") else "no_fines"
+                )
+            connection.execute(
+                """INSERT INTO attribution_decisions (
+                    run_id, contract_name, day, decision_rule, outcome, detail_json
+                ) VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    evidence["run_id"],
+                    name,
+                    conclusion["day"],
+                    decision["decision_rule"],
+                    outcome,
+                    canonical_json_line(conclusion),
+                ),
+            )
+
+
+def write_attribution_ledger(
+    path: Path, evidence: dict[str, Any], evidence_bytes: bytes
+) -> None:
+    """Write the standalone attribution ledger atomically and deterministically."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".tmp")
+    if temporary.exists():
+        temporary.unlink()
+    connection: sqlite3.Connection | None = None
+    try:
+        connection = sqlite3.connect(temporary)
+        connection.executescript(SCHEMA)
+        insert_attribution_rows(
+            connection, evidence, sha256_bytes(evidence_bytes)
+        )
+        connection.commit()
+        connection.close()
+        connection = None
+        os.replace(temporary, path)
+    except Exception:
+        if temporary.exists():
+            temporary.unlink()
+        raise
+    finally:
+        if connection is not None:
+            connection.close()
+            if temporary.exists():
+                temporary.unlink()

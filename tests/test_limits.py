@@ -24,4 +24,6 @@ def test_total_python_size_is_in_range(repo_root: Path):
         if path.is_file()
     )
     total = sum(sum(1 for _ in path.open(encoding="utf-8")) for path in paths)
-    assert 2500 <= total <= 4500, total
+    # Upper bound raised from 4500 when the exact joint-world attribution
+    # package (tzgate/basin/*, its ledger tables and offline tests) landed.
+    assert 2500 <= total <= 5800, total

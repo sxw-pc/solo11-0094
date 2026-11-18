@@ -8,6 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .basin import attribute_basin, load_basin_intake, persist_attribution
 from .console.server import serve_console
 from .errors import InputError, TzGateError
 from .models import SEVERITY_RANK
@@ -50,6 +51,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     summary = subparsers.add_parser("summary", help="打印已生成的 Markdown 摘要")
     summary.add_argument("--out", default=_DEFAULT_OUT, help="输出目录")
+    attribute = subparsers.add_parser(
+        "attribute",
+        help="对已核验流域监测数据做联合可能世界反推与法律归责",
+    )
+    attribute.add_argument("--contract", default="contracts/basin_attribution.yaml")
+    attribute.add_argument("--root", default=".", help="路径解析基准目录")
+    attribute.add_argument(
+        "--intake",
+        default="fixtures/basin_attribution/intake.json",
+        help="传感器矩阵与法律合同声明",
+    )
+    attribute.add_argument("--out", required=True, help="证据与台账输出目录")
+    attribute.add_argument("--run-id", required=True, help="确定性运行编号")
     return parser
 
 
@@ -63,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
             return serve_console(Path(args.out), args.port)
         if args.command == "summary":
             return _summary(Path(args.out))
+        if args.command == "attribute":
+            return _attribute(args)
     except TzGateError as exc:
         print(f"tzgate: error: {exc}", file=sys.stderr)
         return 2
@@ -118,6 +134,35 @@ def _summary(out_dir: Path) -> int:
             f"summary.md not found in {out_dir}; run the verify command first"
         )
     sys.stdout.write(path.read_text(encoding="utf-8"))
+    return 0
+
+
+def _attribute(args: argparse.Namespace) -> int:
+    run_id = _run_id(args.run_id)
+    data = load_basin_intake(
+        Path(args.contract), Path(args.root), Path(args.intake), run_id
+    )
+    evidence = attribute_basin(data)
+    outputs = persist_attribution(evidence, Path(args.out))
+    print(
+        "tzgate attribute: "
+        f"run_id={run_id} "
+        f"biases={','.join(str(value) for value in evidence['feasible_biases'])} "
+        f"joint_worlds={evidence['joint_world_count']}"
+    )
+    for name, decision in evidence["legal_decisions"].items():
+        outcomes = sorted(
+            {
+                conclusion.get("outcome")
+                or ("fine" if conclusion.get("fines_issued") else "no_fine")
+                for conclusion in decision["conclusions"]
+            }
+        )
+        print(f"  {name}: {', '.join(outcomes)}")
+    print(
+        "  outputs: "
+        f"{outputs['json']}, {outputs['ledger']}"
+    )
     return 0
 
 
