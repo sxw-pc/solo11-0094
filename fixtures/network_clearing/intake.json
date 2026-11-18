@@ -24,6 +24,9 @@
       "fixed_point": "greatest"
     }
   },
-  "max_nodes": 6,
-  "max_debts": 12
+  "limits": {
+    "max_parties": 5,
+    "max_debts": 8,
+    "max_priority_levels": 2
+  }
 }
