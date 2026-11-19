@@ -12,6 +12,7 @@ from .console.server import serve_console
 from .errors import InputError, TzGateError
 from .models import SEVERITY_RANK
 from .pipeline import execute_verification
+from .vessel_stowage_intake import build_stowage_decision, write_stowage_outputs
 from .version import __version__
 
 _RUN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
@@ -50,6 +51,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     summary = subparsers.add_parser("summary", help="打印已生成的 Markdown 摘要")
     summary.add_argument("--out", default=_DEFAULT_OUT, help="输出目录")
+    stowage = subparsers.add_parser("stowage", help="对已核验货单做配载决策并写出证据")
+    stowage.add_argument("--contract", default="contracts/vessel_stowage.yaml", help="契约 YAML 路径")
+    stowage.add_argument("--root", default=".", help="路径解析基准目录")
+    stowage.add_argument("--intake", default="fixtures/vessel_stowage/intake.json", help="配载规则 JSON")
+    stowage.add_argument("--out", default="out/stowage", help="输出目录")
+    stowage.add_argument("--run-id", default="stow-001", help="确定性运行编号")
     return parser
 
 
@@ -63,6 +70,8 @@ def main(argv: list[str] | None = None) -> int:
             return serve_console(Path(args.out), args.port)
         if args.command == "summary":
             return _summary(Path(args.out))
+        if args.command == "stowage":
+            return _stowage(args)
     except TzGateError as exc:
         print(f"tzgate: error: {exc}", file=sys.stderr)
         return 2
@@ -118,6 +127,31 @@ def _summary(out_dir: Path) -> int:
             f"summary.md not found in {out_dir}; run the verify command first"
         )
     sys.stdout.write(path.read_text(encoding="utf-8"))
+    return 0
+
+
+def _stowage(args: argparse.Namespace) -> int:
+    run_id = _run_id(args.run_id)
+    try:
+        document = build_stowage_decision(
+            Path(args.contract), Path(args.root), Path(args.intake), run_id
+        )
+    except ValueError as exc:
+        raise InputError(f"stowage intake refused: {exc}") from exc
+    json_path, ledger_path = write_stowage_outputs(document, Path(args.out), Path(args.root))
+    print(
+        f"tzgate stowage: run_id={run_id} containers={len(document['containers'])} "
+        f"ports={','.join(document['port_order'])}"
+    )
+    for name in sorted(document["plans"]):
+        plan = document["plans"][name]
+        carried = ",".join(plan["carried"]) or "-"
+        print(
+            f"  {name}: carried={carried} rehandles={plan['rehandles']} "
+            f"freight={plan['freight_cents']} cost={plan['rehandle_cost_cents']} "
+            f"net={plan['net_cents']}"
+        )
+    print(f"  outputs: {json_path}, {ledger_path}")
     return 0
 
 

@@ -108,6 +108,17 @@ python -m tzgate console --out out/demo --port 0
 
 服务硬编码绑定 `127.0.0.1`，端口由系统分配并打印；只读打开 SQLite（`mode=ro&immutable=1`），提供概览、筛选、问题详情与 `/api/issues` JSON。没有 host 参数，无法配置成 `0.0.0.0`。
 
+## 航次配载决策
+
+`contracts/vessel_stowage.yaml` 声明的 cargo_manifest 湖表核验通过后，`stowage` 子命令读取 `fixtures/vessel_stowage/intake.json` 声明的堆/层、港序、配平上限与两份承运合同，在合同上限（6 箱、3 堆 × 2 层、两港）内做离线有界精确搜索：
+
+```sh
+python -m tzgate stowage --contract contracts/vessel_stowage.yaml --root . \
+    --out out/stowage --run-id stow-check
+```
+
+对每份合同输出：选与拒载箱（含拒载原因）、舱位图、初航与首港离港质量核算、逐港吊箱动作序列（卸箱/临时吊离/回装）、倒箱次数与运费结算（运费 − 倒箱费最大），以及最优性证据（搜索规模、全集不可行违例统计、动作复核）。重复箱号、非法港/重量/运费、来源缺失或核验不通过即拒签。结果写入 `stowage.json` 与 `stowage.sqlite3` 台账；清单、契约或规则任何变动都会改变决策与哈希，不会沿用旧结论。
+
 ## 离线安装
 
 运行时仅依赖 `PyYAML`，开发测试仅额外依赖 `pytest`。在联网机器准备 wheel：
@@ -129,7 +140,7 @@ python -m pytest
 
 ## 测试与规模
 
-`python -m pytest` 覆盖规则簿换算、空洞/回拨、三类检测、报告转义、SQLite 台账、只读复核台、fixture 重生成、字节级确定性、`PYTHONHASHSEED` 变异、输入只读与输出路径防护。每个 Python 源文件 ≤ 300 行；全部 Python 代码约 4.1k 行（含测试与 fixture 生成器）。
+`python -m pytest` 覆盖规则簿换算、空洞/回拨、三类检测、报告转义、SQLite 台账、只读复核台、fixture 重生成、字节级确定性、`PYTHONHASHSEED` 变异、输入只读与输出路径防护，以及航次配载决策、港口吊箱序列、倒箱计费与拒签。每个 Python 源文件 ≤ 300 行；全部 Python 代码约 4.9k 行（含测试与 fixture 生成器）。
 
 ## 目录
 
